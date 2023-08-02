@@ -9,11 +9,12 @@ import (
 
 const secretKey string = "testSecretKey"
 
-func generateToken(username string) string {
+func generateToken(username string, uid int64) string {
 	// create a token object
 	token := jwt.New(jwt.SigningMethodHS256)
 	// set claims of the token
 	claims := token.Claims.(jwt.MapClaims)
+	claims["userid"] = uid
 	claims["username"] = username
 	claims["exp"] = time.Now().Add(time.Hour * 48).Unix() // expired time is 48 hours
 
@@ -50,5 +51,19 @@ func getUsername(tokenString string) (string, error) {
 	} else {
 		err := errors.New("unable to get user name with token")
 		return "", err
+	}
+}
+func getUID(tokenString string) (int64, error) {
+	if checkToken(tokenString) {
+		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			// 返回签名密钥
+			return []byte(secretKey), nil
+		})
+		claims := token.Claims.(jwt.MapClaims)
+		uid := claims["userid"].(int64)
+		return uid, nil
+	} else {
+		err := errors.New("unable to get user name with token")
+		return 0, err
 	}
 }
