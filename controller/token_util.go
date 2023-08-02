@@ -53,6 +53,7 @@ func getUsername(tokenString string) (string, error) {
 		return "", err
 	}
 }
+
 func getUID(tokenString string) (int64, error) {
 	if checkToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -60,10 +61,10 @@ func getUID(tokenString string) (int64, error) {
 			return []byte(secretKey), nil
 		})
 		claims := token.Claims.(jwt.MapClaims)
-		uid := claims["userid"].(int64)
+		uid := int64(claims["userid"].(float64))
 		return uid, nil
 	} else {
-		err := errors.New("unable to get user name with token")
+		err := errors.New("unable to get uid with token")
 		return 0, err
 	}
 }
