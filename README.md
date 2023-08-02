@@ -16,7 +16,7 @@ go build && ./Momotok-Server
 
 * 用户登录数据保存在MySQL数据库中
 * 视频上传后会保存到本地 public 目录中，访问时用 127.0.0.1:8080/static/video_name 即可
-* 
+
 ### 目前进度
 - [x] basic apis
   - [x] controller.Feed
@@ -65,8 +65,8 @@ create table video
     id              int auto_increment
         primary key,
     author_id       int                                 null,
-    play_url        linestring                          null,
-    cover_url       linestring                          null,
+    play_url        text                                null,
+    cover_url       text                                null,
     favourite_count int                                 null,
     comment_count   int                                 null,
     title           varchar(72)                         null,
