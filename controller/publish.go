@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"path/filepath"
 	"strconv"
 )
 
@@ -19,7 +18,6 @@ func Publish(c *gin.Context) {
 	//token := c.PostForm("token")
 	//验证token
 	title := c.PostForm("title")
-	const DatabaseAddress string = "root:root@tcp(localhost:3306)/momotok"
 	db, err := sql.Open("mysql", DatabaseAddress)
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
@@ -32,8 +30,9 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
+	uid, _ := getUID(c.Query("token"))
 	c.SaveUploadedFile(file, "./data/"+file.Filename)
-	_, err = db.Exec("INSERT INTO video (author_id,title) VALUES (?,?)", 1, title) //从token里面获取之后更新
+	_, err = db.Exec("INSERT INTO video (author_id,title) VALUES (?,?)", uid, title) //从token里面获取之后更新
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -60,9 +59,14 @@ func PublishList(c *gin.Context) {
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 	}
+
 	var user = User{Id: parseIntID}
-	rows, _ := db.Query("select video.id, play_url, cover_url, favourite_count, comment_count, title, publish_time, user.username FROM video JOIN user ON video.author_id = user.id where author_id = %d ", parseIntID)
+	rows, err := db.Query("select video.id, play_url, cover_url, favourite_count, comment_count, title, publish_time, user.username FROM video JOIN user ON video.author_id = user.id where author_id = ? ", parseIntID)
 	videoList := make([]Video, 0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	for rows.Next() {
 		var videoId int64
 		var playUrl string
@@ -78,7 +82,7 @@ func PublishList(c *gin.Context) {
 		} //find published videos
 		var likedID int
 		isFavourite := false
-		db.QueryRow("select id FROM likes where user_id = %d AND video_id = %d", userId, videoId).Scan(&likedID)
+		db.QueryRow("select id FROM likes where user_id = ? AND video_id = ?", userId, videoId).Scan(&likedID)
 		if likedID != 0 {
 			isFavourite = true
 		}
@@ -93,6 +97,8 @@ func PublishList(c *gin.Context) {
 		}
 		videoList = append(videoList, video) //视频切片加入视频列表
 	}
+	defer rows.Close()
+
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
