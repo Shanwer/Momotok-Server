@@ -14,35 +14,31 @@ type VideoListResponse struct {
 	VideoList []Video `json:"video_list"`
 }
 
-// Publish check token then save upload file to public directory
+// Publish function that check token then save upload file to public directory
 func Publish(c *gin.Context) {
-
-	token := c.PostForm("token")
-	//验证token
-
-	ischeak := checkToken(token)
-	uid, err := getUID(token)
-	if !ischeak {
+	tokenString := c.PostForm("token")
+	uid, err := getUID(tokenString)
+	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  "token is useless",
 		})
 		return
 	}
-	username, err := getUsername(token)
+	username, err := getUsername(tokenString)
 
 	id := 0
 	title := c.PostForm("title")
-	const DatabaseAddress string = "root:root@tcp(localhost:3306)/momotok"
 	db, err := sql.Open("mysql", DatabaseAddress)
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 	}
+  
 	file, err := c.FormFile("data")
-	err = c.SaveUploadedFile(file, "./public/"+file.Filename)
-	if err != nil {
+  	if err != nil {
 		return 
 	}
+	err = c.SaveUploadedFile(file, "./public/"+file.Filename)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -50,18 +46,13 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	filepath := path.Join("https://" + "/" + username + "/" + strconv.Itoa(id))
-	println(filepath)
 
+	filepath := path.Join("https://" + "/" + username + "/" + strconv.Itoa(id))
 	_, err = db.Exec("INSERT INTO video (author_id,title,favourite_count,comment_count,play_url) VALUES (?,?,?,?,?)", uid, title, 0, 0, filepath) //,favourite_count,comment_count,play_url
-	if err != nil {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-		return
-	}
-	err = db.QueryRow("SELECT LAST_INSERT_ID()").Scan(&id)
+	uid, _ := getUID(c.Query("token"))
+	c.SaveUploadedFile(file, "./data/"+file.Filename)
+	_, err = db.Exec("INSERT INTO video (author_id,title) VALUES (?,?)", uid, title) //从token里面获取之后更新
+
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -74,7 +65,6 @@ func Publish(c *gin.Context) {
 		StatusCode: 0,
 		StatusMsg:  "success",
 	})
-	return
 }
 // PublishList shows user's published videos
 func PublishList(c *gin.Context) {

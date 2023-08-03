@@ -72,7 +72,7 @@ func Register(c *gin.Context) {
 	}
 	id := int64(0)
 	err = db.QueryRow("SELECT ID FROM user WHERE username = ?", username).Scan(&id)
-	token := generateToken(username)
+	token := generateToken(username, id)
 
 	c.JSON(http.StatusOK, UserLoginResponse{
 		Response: Response{StatusCode: 0},
@@ -99,7 +99,7 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
-	token := generateToken(username)
+	token := generateToken(username, id)
 	c.JSON(http.StatusOK, UserLoginResponse{
 		Response: Response{StatusCode: 0},
 		UserId:   id,

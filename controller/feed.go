@@ -28,7 +28,7 @@ func Feed(c *gin.Context) {
 var currentPage = 1 //全局变量记录当前page
 
 func makeVideoList() []Video {
-	db, err := sql.Open("mysql", "Yana:root@tcp(127.0.0.1:3307)/videodata") //连接数据库
+	db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
 	//数据库表名为video，字段为id, author_id, play_url, cover_url, favorite_count, comment_count, is_favorite, title，&publish_time具体类型见下述定义
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
@@ -40,9 +40,8 @@ func makeVideoList() []Video {
 		fmt.Println("Failed to execute query:", err)
 		return nil
 	}
-	offSet := (page - 1) * perPage                                                                             //offSet:视频开始位置
-	query := fmt.Sprintf("SELECT * FROM video ORDER BY publish_time DESC LIMIT %d OFFSET %d", perPage, offSet) //写入sql指令，按倒序查找列
-	rows, err := db.Query(query)                                                                               //执行上述指令
+	offSet := (page - 1) * perPage                                                                            //offSet:视频开始位置
+	rows, err := db.Query("SELECT * FROM video ORDER BY publish_time DESC LIMIT ? OFFSET ?", perPage, offSet) //写入sql指令，按倒序查找列                                                                           //执行上述指令
 	if err != nil {
 		fmt.Println("Failed to execute query:", err)
 		return nil
