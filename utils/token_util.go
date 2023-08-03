@@ -1,4 +1,4 @@
-package controller
+package utils
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 
 const secretKey string = "testSecretKey"
 
-func generateToken(username string, uid int64) string {
+func GenerateToken(username string, uid int64) string {
 	// create a token object
 	token := jwt.New(jwt.SigningMethodHS256)
 	// set claims of the token
@@ -24,7 +24,7 @@ func generateToken(username string, uid int64) string {
 	return tokenString
 }
 
-func checkToken(tokenString string) bool {
+func CheckToken(tokenString string) bool {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil //secret key
 	})
@@ -39,8 +39,8 @@ func checkToken(tokenString string) bool {
 	}
 }
 
-func getUsername(tokenString string) (string, error) {
-	if checkToken(tokenString) {
+func GetUsername(tokenString string) (string, error) {
+	if CheckToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 返回签名密钥
 			return []byte(secretKey), nil
@@ -49,13 +49,13 @@ func getUsername(tokenString string) (string, error) {
 		username := claims["username"].(string)
 		return username, nil
 	} else {
-		err := errors.New("unable to get user name with token")
+		err := errors.New("invalid token")
 		return "", err
 	}
 }
 
-func getUID(tokenString string) (int64, error) {
-	if checkToken(tokenString) {
+func GetUID(tokenString string) (int64, error) {
+	if CheckToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 返回签名密钥
 			return []byte(secretKey), nil
@@ -64,7 +64,23 @@ func getUID(tokenString string) (int64, error) {
 		uid := int64(claims["userid"].(float64))
 		return uid, nil
 	} else {
-		err := errors.New("unable to get uid with token")
+		err := errors.New("invalid token")
 		return 0, err
+	}
+}
+
+func GetUser(tokenString string) (int64, string, error) {
+	if CheckToken(tokenString) {
+		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			// 返回签名密钥
+			return []byte(secretKey), nil
+		})
+		claims := token.Claims.(jwt.MapClaims)
+		uid := int64(claims["userid"].(float64))
+		username := claims["username"].(string)
+		return uid, username, nil
+	} else {
+		err := errors.New("invalid token")
+		return 0, "", err
 	}
 }

@@ -34,12 +34,8 @@ func makeVideoList() []Video {
 		fmt.Println("Failed to connect to database:", err)
 	}
 	defer db.Close()
-	perPage := 30       //设置最大加载数
-	page := currentPage //设置页数
-	if err != nil {
-		fmt.Println("Failed to execute query:", err)
-		return nil
-	}
+	perPage := 30                                                                                             //设置最大加载数
+	page := currentPage                                                                                       //设置页数
 	offSet := (page - 1) * perPage                                                                            //offSet:视频开始位置
 	rows, err := db.Query("SELECT * FROM video ORDER BY publish_time DESC LIMIT ? OFFSET ?", perPage, offSet) //写入sql指令，按倒序查找列                                                                           //执行上述指令
 	if err != nil {
@@ -49,20 +45,26 @@ func makeVideoList() []Video {
 	defer rows.Close()
 
 	videos := make([]Video, 0) //创建视频列表
-	for rows.Next() {          //循环读取直到列结束
+	for rows.Next() {
+		//循环读取直到列结束
 		var id int64
 		var author_id int
 		var play_url string
 		var cover_url string
 		var favorite_count int64
 		var comment_count int64
-		var is_favorite bool
 		var title string
-		var publish_time int64
-		err := rows.Scan(&id, &author_id, &play_url, &cover_url, &favorite_count, &comment_count, &is_favorite, &title, &publish_time)
+		var published_time []uint8 //TODO:未使用的变量
+		err := rows.Scan(&id, &author_id, &play_url, &cover_url, &favorite_count, &comment_count, &title, &published_time)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
 			continue
+		}
+		var likedID int
+		isFavourite := false
+		db.QueryRow("select id FROM likes where user_id = ? AND video_id = ?", author_id, id).Scan(&likedID)
+		if likedID != 0 {
+			isFavourite = true
 		}
 		video := Video{ //载入视频结构
 			Id:            id,
@@ -71,9 +73,10 @@ func makeVideoList() []Video {
 			CoverUrl:      cover_url,
 			FavoriteCount: favorite_count,
 			CommentCount:  comment_count,
-			IsFavorite:    is_favorite,
+			IsFavorite:    isFavourite,
 		}
 		videos = append(videos, video) //视频切片加入视频列表
+		fmt.Println(videos)
 	}
 	currentPage++
 	return videos //返回视频列表

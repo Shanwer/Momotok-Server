@@ -4,7 +4,9 @@
 
 具体功能内容参考飞书说明文档
 
-工程无其他依赖，直接编译运行即可
+工程除了go.mod包含的依赖外，还使用ffmpeg以生成视频缩略图，需要另外安装并配置进%path%在服务器上  
+ffmpeg地址:https://ffbinaries.com/downloads  
+其中go-ffmpeg为私人库，开发时不一定能同步到依赖，需要手动操作
 
 ```shell
 go build && ./Momotok-Server
@@ -16,6 +18,10 @@ go build && ./Momotok-Server
 
 * 用户登录数据保存在MySQL数据库中
 * 视频上传后会保存到本地 public 目录中，访问时用 127.0.0.1:8080/static/video_name 即可
+
+### TODO: 
+  1. extra apis - I
+  2. 服务器配置文件（静态资源地址，数据库地址，feed流视频限制之类）（防忘）
 
 ### 目前进度
 - [x] basic apis
@@ -50,15 +56,19 @@ test 目录下为不同场景的功能测试case，可用于验证功能实现�
 ````mysql
 create table user
 (
-    id         int auto_increment
-        primary key,
-    username   varchar(50)                         not null,
-    ip         varchar(15)                         null,
-    password   varchar(60)                         null,
-    created_at timestamp default CURRENT_TIMESTAMP not null,
-    constraint name
-        unique (username)
-)ENGINE = InnoDB;
+  id                   int auto_increment
+    primary key,
+  username             varchar(50)                         not null,
+  ip                   varchar(15)                         null,
+  password             varchar(60)                         null,
+  created_at           timestamp default CURRENT_TIMESTAMP not null,
+  total_received_likes int       default 0                 null,
+  work_count           int       default 0                 null,
+  total_likes          int       default 0                 null,
+  constraint name
+    unique (username)
+)
+  engine = InnoDB;
 
 create table video
 (

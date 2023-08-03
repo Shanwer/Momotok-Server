@@ -2,6 +2,7 @@ package controller
 
 import (
 	"Momotok-Server/rpc"
+	"Momotok-Server/utils"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -15,17 +16,8 @@ import (
 
 const DatabaseAddress string = "root:shanwer666@tcp(localhost:3306)/momotok" //SQL address(1024)
 //const DatabaseAddress string = "root:root@tcp(localhost:3306)/momotok" //SQL address(1024)
-// sql statements of the table,database name:momotok
-// CREATE TABLE user (
-//	id INT PRIMARY KEY AUTO_INCREMENT,
-//	username VARCHAR(50) NOT NULL UNIQUE,
-//	ip VARCHAR(15),
-//	password VARCHAR(60),
-//	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-// );
 
 // usersLoginInfo use map to store user info, token is created by jwt
-// user data will be stored in the 1024 workspace MySQL server
 var usersLoginInfo = map[string]User{
 	//TODO:其他模块需要改写为从数据库中获取
 }
@@ -72,7 +64,7 @@ func Register(c *gin.Context) {
 	}
 	id := int64(0)
 	err = db.QueryRow("SELECT ID FROM user WHERE username = ?", username).Scan(&id)
-	token := generateToken(username, id)
+	token := utils.GenerateToken(username, id)
 
 	c.JSON(http.StatusOK, UserLoginResponse{
 		Response: Response{StatusCode: 0},
@@ -99,7 +91,7 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
-	token := generateToken(username, id)
+	token := utils.GenerateToken(username, id)
 	c.JSON(http.StatusOK, UserLoginResponse{
 		Response: Response{StatusCode: 0},
 		UserId:   id,
@@ -109,7 +101,7 @@ func Login(c *gin.Context) {
 
 func UserInfo(c *gin.Context) {
 	uid := c.Query("user_id")
-	if !checkToken(c.Query("token")) {
+	if !utils.CheckToken(c.Query("token")) {
 		return
 	}
 
