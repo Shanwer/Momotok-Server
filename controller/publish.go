@@ -3,12 +3,10 @@ package controller
 import (
 	"database/sql"
 	"fmt"
-	"path"
-	"strconv"
-
-	//"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"path"
+	"strconv"
 )
 
 type VideoListResponse struct {
@@ -41,7 +39,10 @@ func Publish(c *gin.Context) {
 		fmt.Println("Database connected failed: ", err)
 	}
 	file, err := c.FormFile("data")
-	c.SaveUploadedFile(file, "./public/"+file.Filename)
+	err = c.SaveUploadedFile(file, "./public/"+file.Filename)
+	if err != nil {
+		return 
+	}
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -75,10 +76,7 @@ func Publish(c *gin.Context) {
 	})
 	return
 }
-
-// PublishList all users have same publish video list
 // PublishList shows user's published videos
-// PublishList all users have same publish video list
 func PublishList(c *gin.Context) {
 	if !checkToken(c.Query("token")) {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Unauthorized request"})
@@ -90,9 +88,14 @@ func PublishList(c *gin.Context) {
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 	}
+
 	var user = User{Id: parseIntID}
-	rows, _ := db.Query("select video.id, play_url, cover_url, favourite_count, comment_count, title, publish_time, user.username FROM video JOIN user ON video.author_id = user.id where author_id = %d ", parseIntID)
+	rows, err := db.Query("select video.id, play_url, cover_url, favourite_count, comment_count, title, publish_time, user.username FROM video JOIN user ON video.author_id = user.id where author_id = ? ", parseIntID)
 	videoList := make([]Video, 0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	for rows.Next() {
 		var videoId int64
 		var playUrl string
@@ -108,7 +111,7 @@ func PublishList(c *gin.Context) {
 		} //find published videos
 		var likedID int
 		isFavourite := false
-		db.QueryRow("select id FROM likes where user_id = %d AND video_id = %d", userId, videoId).Scan(&likedID)
+		db.QueryRow("select id FROM likes where user_id = ? AND video_id = ?", userId, videoId).Scan(&likedID)
 		if likedID != 0 {
 			isFavourite = true
 		}
@@ -123,15 +126,12 @@ func PublishList(c *gin.Context) {
 		}
 		videoList = append(videoList, video) //视频切片加入视频列表
 	}
+	defer rows.Close()
+
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
 		VideoList: videoList,
-		VideoList: DemoVideos,
-	})
-}
-
-		VideoList: DemoVideos,
 	})
 }
