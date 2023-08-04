@@ -9,12 +9,11 @@ import (
 	"strings"
 )
 
-// TODO:生成的封面图过于大了，需要修改
 func GetSnapshot(videoPath, snapshotPath string, frameNum int) (snapshotName string, err error) {
 	buf := bytes.NewBuffer(nil)
 	err = ffmpeg.Input(videoPath).
 		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
-		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg", "qscale": 2}).
 		WithOutput(buf, nil).
 		Silent(true).
 		Run()
@@ -30,13 +29,13 @@ func GetSnapshot(videoPath, snapshotPath string, frameNum int) (snapshotName str
 		return "", err
 	}
 
-	err = imaging.Save(img, snapshotPath+".png")
+	err = imaging.Save(img, snapshotPath+".jpg")
 	if err != nil {
 		log.Fatal("生成缩略图失败：", err)
 		return "", err
 	}
 
 	names := strings.Split(snapshotPath, "\\")
-	snapshotName = names[len(names)-1] + ".png"
+	snapshotName = names[len(names)-1] + ".jpg"
 	return
 }

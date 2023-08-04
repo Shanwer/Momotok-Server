@@ -142,9 +142,6 @@ func UserInfo(c *gin.Context) {
 		"status_code": 0,
 		"status_msg":  "Success",
 		"user":        userInfo,
-		//"signature":   string(signature),
-		//"avatar":      avatar,
-		//"background_image": background_image,
 	})
 	return
 }

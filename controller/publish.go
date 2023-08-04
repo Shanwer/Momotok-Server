@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-sql-driver/mysql"
 	"io"
 	"net/http"
 	"strconv"
@@ -47,11 +48,11 @@ func Publish(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
-			StatusMsg:  err.Error(), //possible issue: repeated filename
+			StatusMsg:  err.Error(),
 		})
 		return
 	}
-	cover_url, err := utils.GetSnapshot("./public/"+file.Filename, "./public/snapshot/"+file.Filename, 1) //get the first frame of the video
+	_, err = utils.GetSnapshot("./public/"+file.Filename, "./public/snapshot/"+file.Filename, 1) //get the first frame of the video
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -59,17 +60,26 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	cover_url = staticUrl + "snapshot/" + file.Filename + ".png"
-
+	cover_url := staticUrl + "snapshot/" + file.Filename + ".jpg"
 	play_url := staticUrl + file.Filename
+
 	_, err = db.Exec("INSERT INTO video (author_id,title,favourite_count,comment_count,play_url,cover_url) VALUES (?,?,?,?,?,?)", uid, title, 0, 0, play_url, cover_url)
-	var workCount int
-	err = db.QueryRow("select work_count from user").Scan(&workCount)
-	if err != nil {
+	if err != nil { //duplicate username check
+		mysqlErr, ok := err.(*mysql.MySQLError)
+		if !ok {
+			fmt.Println("Upload failed：", err)
+		}
+		if mysqlErr.Number == 1062 {
+			c.JSON(http.StatusOK, UserResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "Video already exists!"},
+			})
+		} else {
+			fmt.Println("Upload failed：", err)
+		}
 		return
 	}
-	workCount++
-	_, err = db.Exec("UPDATE user SET work_count = ? where id = ?", workCount, uid) //TODO:寻找一种更好的办法
+
+	_, err = db.Exec("UPDATE user SET work_count = work_count + 1 where id = ?", uid)
 
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
