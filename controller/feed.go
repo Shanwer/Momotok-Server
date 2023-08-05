@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"Momotok-Server/rpc"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"io"
 	"net/http"
 	"time"
 )
@@ -69,8 +71,23 @@ func makeVideoList(page, perPage int) []Video {
 			isFavourite = true
 		}
 
-		row := db.QueryRow("SELECT id, username, work_count, FROM user WHERE id = ?", author_id)
-		var user User
+		resp, _ := rpc.HttpRequest("GET", "https://v1.hitokoto.cn/?c=a&c=d&c=i&c=k&encode=text", nil)
+		if resp.Body != nil {
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+			}(resp.Body)
+		}
+		signature, _ := io.ReadAll(resp.Body)
+		user := User{
+			Signature:       string(signature),
+			Avatar:          "https://acg.suyanw.cn/sjtx/random.php",
+			BackgroundImage: "https://acg.suyanw.cn/api.php",
+		}
+
+		row := db.QueryRow("SELECT id, username, work_count  FROM user WHERE id = ?", author_id)
 		err = row.Scan(&user.Id, &user.Name, &user.WorkCount)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
@@ -83,6 +100,7 @@ func makeVideoList(page, perPage int) []Video {
 			FavoriteCount: favorite_count,
 			CommentCount:  comment_count,
 			IsFavorite:    isFavourite,
+			Title:         title,
 		}
 		videos = append(videos, video) //视频切片加入视频列表
 		isLast++
