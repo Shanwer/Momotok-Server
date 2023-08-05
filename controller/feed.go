@@ -69,15 +69,12 @@ func makeVideoList(page, perPage int) []Video {
 			isFavourite = true
 		}
 
-		row := db.QueryRow("SELECT id, username FROM user WHERE id = ?", author_id)
+		row := db.QueryRow("SELECT id, username, work_count, FROM user WHERE id = ?", author_id)
 		var user User
-		err = row.Scan(&user.Id, &user.Name)
+		err = row.Scan(&user.Id, &user.Name, &user.WorkCount)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
 		}
-		user.FollowerCount = 6
-		user.FollowCount = 5
-		user.IsFollow = true
 		video := Video{ //载入视频结构
 			Id:            id,
 			Author:        user,
