@@ -1,0 +1,14 @@
+server:
+  mode: "development"
+  host: "localhost"
+  port: "8080"
+  enable_https: false
+  token_expire_second: 3600
+  system_static_file_path: "/path/to/static/files"
+  video_url_path: "/path/to/videos"
+  max_per_page: 30
+  default_max_per_page: 15
+  database_address: "mysql://user:password@localhost/dbname"
+  driver_name: "mysql"
+
+
