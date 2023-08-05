@@ -68,9 +68,19 @@ func makeVideoList(page, perPage int) []Video {
 		if likedID != 0 {
 			isFavourite = true
 		}
+
+		row := db.QueryRow("SELECT id, username FROM user WHERE id = ?", author_id)
+		var user User
+		err = row.Scan(&user.Id, &user.Name)
+		if err != nil {
+			fmt.Println("Failed to scan row:", err)
+		}
+		user.FollowerCount = 6
+		user.FollowCount = 5
+		user.IsFollow = true
 		video := Video{ //载入视频结构
 			Id:            id,
-			Author:        DemoUser,
+			Author:        user,
 			PlayUrl:       play_url,
 			CoverUrl:      cover_url,
 			FavoriteCount: favorite_count,
@@ -78,8 +88,7 @@ func makeVideoList(page, perPage int) []Video {
 			IsFavorite:    isFavourite,
 		}
 		videos = append(videos, video) //视频切片加入视频列表
-		fmt.Println(videos)
-		islast++
+		isLast++
 	}
 	if isLast < perPage {
 		currentPage = 0
