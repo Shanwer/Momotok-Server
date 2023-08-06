@@ -18,10 +18,10 @@ go build && ./Momotok-Server
 
 * 用户登录数据保存在MySQL数据库中
 * 视频上传后会保存到本地 public 目录中，访问时用 127.0.0.1:8080/static/hashed256_video_name 即可
+* 服务器存在配置文件，在system的config.yaml中定义了
 
-### TODO: 
+### 正在开发
   1. extra apis - I
-  2. 服务器配置文件（静态资源地址，数据库地址，feed流视频限制之类）（防忘）
 
 ### 目前进度
 - [x] basic apis
@@ -34,8 +34,8 @@ go build && ./Momotok-Server
 - [ ] extra apis - I
   - [ ] apiRouter.POST("/favorite/action/", controller.FavoriteAction)
   - [ ] apiRouter.GET("/favorite/list/", controller.FavoriteList)
-  - [ ] apiRouter.POST("/comment/action/", controller.CommentAction)
-  - [ ] apiRouter.GET("/comment/list/", controller.CommentList)
+  - [x] apiRouter.POST("/comment/action/", controller.CommentAction)
+  - [x] apiRouter.GET("/comment/list/", controller.CommentList)
 - [ ] extra apis - II
   - [ ] apiRouter.POST("/relation/action/", controller.RelationAction)
   - [ ] apiRouter.GET("/relation/follow/list/", controller.FollowList)
@@ -104,6 +104,12 @@ create table likes
     FOREIGN KEY (video_id) REFERENCES video(id)
 )ENGINE = InnoDB;
 
+create index user_id
+  on likes (user_id);
+
+create index video_id
+  on likes (video_id);
+
 create table comments
 (
     id              int auto_increment primary key,
@@ -114,4 +120,10 @@ create table comments
     FOREIGN KEY (commenter_id) REFERENCES user(id),
     FOREIGN KEY (video_id) REFERENCES video(id)
 )ENGINE = InnoDB;
+
+create index commenter_id
+  on comments (commenter_id);
+
+create index video_id
+  on comments (video_id);
 ````

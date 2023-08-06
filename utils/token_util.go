@@ -15,7 +15,7 @@ func GenerateToken(username string, uid int64) string {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["userid"] = uid
 	claims["username"] = username
-	claims["exp"] = time.Now().Add(time.Hour * 48).Unix()
+	claims["exp"] = time.Now().Add(time.Second * time.Duration(system.ServerInfo.Server.TokenExpireSecond)).Unix()
 
 	// generate toke string
 	tokenString, _ := token.SignedString([]byte(system.ServerInfo.Server.SecretKey))

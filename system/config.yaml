@@ -1,13 +1,13 @@
 server:
-  mode: debug  #debug,release
+  mode: debug  #debug,release(for gin's mode)
   host: localhost
   port: 8080
-  enable_https: false
-  token_expire_second: 172800
+  enable_https: false #not available
+  token_expire_second: 172800 #stand for 48H
   static_file_url: http://192.168.31.224:8080/static/
-  max_per_page: 15
+  max_per_page: 15 #feed max videos per page
   database_address: root:shanwer666@tcp(localhost:3306)/momotok
-  driver_name: mysql
+  driver_name: mysql #not available
   secret_key: testSecretKey
 
 

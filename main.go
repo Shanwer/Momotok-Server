@@ -18,5 +18,5 @@ func main() {
 	r := gin.Default()
 	gin.SetMode(system.ServerInfo.Server.Mode)
 	initRouter(r)
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(system.ServerInfo.Server.Host + ":" + system.ServerInfo.Server.Port) //listen and serve on 0.0.0.0:8080 by default(for windows "localhost:8080")
 }

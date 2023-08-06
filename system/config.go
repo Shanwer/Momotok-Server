@@ -1,12 +1,10 @@
 package system
 
 type configModel struct {
-	Server *ServerModel `yaml:"server"`
+	Server *serverModel `yaml:"server"`
 }
 
-//serverModel get server information from config.yml
-
-type ServerModel struct {
+type serverModel struct {
 	Mode string `yaml:"mode"` // run mode
 
 	Host string `yaml:"host"` // server host
@@ -27,3 +25,5 @@ type ServerModel struct {
 
 	SecretKey string `yaml:"secret_key"` //token secretkey
 }
+
+//two structs above get config info from config.yaml
