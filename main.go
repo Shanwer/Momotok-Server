@@ -13,7 +13,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("Failed to load config information: %s\n", err)
 	}
-	println(common.ServerInfo.SecretKey)
+	println("Token secret key is:" + common.ServerInfo.SecretKey)
 
 	go service.RunMessageServer()
 	r := gin.Default()
