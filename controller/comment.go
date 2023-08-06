@@ -26,60 +26,59 @@ func CommentAction(c *gin.Context) {
 	token := c.Query("token")
 	actionType := c.Query("action_type")
 
-	if utils.CheckToken(token) {
-		Uid, err := utils.GetUID(token)
+	Uid, err := utils.GetUID(token)
+	if err != nil {
+		fmt.Println("Get UID Error:", err)
+	}
+	var user User
+	user, err = getUserFromdb(Uid)
+
+	if err != nil {
+		fmt.Println("Get User Struct Error:", err)
+	}
+
+	videoID := c.Query("video_id")
+
+	if actionType == "1" {
+		text := c.Query("comment_text")
+		// 获取当前时间
+		currentTime := time.Now()
+		// 将时间格式化为 "MM-DD" 格式
+		currentDate := currentTime.Format("01-02")
+		db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
 		if err != nil {
-			fmt.Println("Get UID Error:", err)
+			fmt.Println("Failed to connect to database:", err)
 		}
-		var user User
-		user, err = getUserFromdb(Uid)
+		defer db.Close()
 
+		_, err = db.Exec("INSERT INTO comments (video_id,commenter_id,content) VALUES (?,?,?)", videoID, Uid, text)
 		if err != nil {
-			fmt.Println("Get User Struct Error:", err)
+			fmt.Println("Comment Upload failed：", err)
 		}
 
-		videoID := c.Query("video_id")
+		_, err = db.Exec("UPDATE video SET comment_count = comment_count + 1 WHERE id = ?", videoID)
+		if err != nil {
+			fmt.Println("Failed to update video comment count:", err)
+		}
 
-		if actionType == "1" {
-			text := c.Query("comment_text")
-			// 获取当前时间
-			currentTime := time.Now()
-			// 将时间格式化为 "MM-DD" 格式
-			currentDate := currentTime.Format("01-02")
-			db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
-			if err != nil {
-				fmt.Println("Failed to connect to database:", err)
-			}
-			defer db.Close()
+		var commentID int64
+		row := db.QueryRow("SELECT LAST_INSERT_ID()")
+		if err := row.Scan(&commentID); err != nil {
+			fmt.Println("Failed to get comment ID:", err)
+		}
 
-			_, err = db.Exec("INSERT INTO comments (video_id,commenter_id,content) VALUES (?,?,?)", videoID, Uid, text)
-			if err != nil {
-				fmt.Println("Comment Upload failed：", err)
-			}
-
-			_, err = db.Exec("UPDATE video SET comment_count = comment_count + 1 WHERE id = ?", videoID)
-			if err != nil {
-				fmt.Println("Failed to update video comment count:", err)
-			}
-
-			var commentID int64
-			row := db.QueryRow("SELECT LAST_INSERT_ID()")
-			if err := row.Scan(&commentID); err != nil {
-				fmt.Println("Failed to get comment ID:", err)
-			}
-
-			fmt.Println("last insert id :", commentID)
-			c.JSON(http.StatusOK, CommentActionResponse{Response: Response{StatusCode: 0},
-				Comment: Comment{
-					Id:         commentID,
-					User:       user,
-					Content:    text,
-					CreateDate: currentDate,
-				}})
-			return
+		fmt.Println("last insert id :", commentID)
+		c.JSON(http.StatusOK, CommentActionResponse{Response: Response{StatusCode: 0},
+			Comment: Comment{
+				Id:         commentID,
+				User:       user,
+				Content:    text,
+				CreateDate: currentDate,
+			}})
+		return
 		}
 		c.JSON(http.StatusOK, Response{StatusCode: 0})
-	} else {
+	 else {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
 	}
 }
@@ -105,7 +104,7 @@ func makeCommentList(videoID string) ([]Comment, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM comments WHERE video_id = ? ORDER BY create_date DESC", videoID) //写入sql指令，按倒序查找列                                                                           //执行上述指令
+	rows, err := db.Query("SELECT * FROM comments WHERE video_id = ? ORDER BY create_date DESC", videoID) //写入sql指令，按倒序查找列
 	if err != nil {
 		fmt.Println("Failed to execute query:", err)
 	}
