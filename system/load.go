@@ -29,6 +29,7 @@ func LoadConfigInformation() error {
 			DefaultMaxPerPage    int    `yaml:"default_max_per_page"`
 			DatabaseAddress      string `yaml:"database_address"`
 			DriverName           string `yaml:"driver_name"`
+			SecretKey            string `yaml:"secret_key"`
 		} `yaml:"server"`
 	}
 
@@ -48,6 +49,7 @@ func LoadConfigInformation() error {
 	common.ServerInfo.DefaultMaxPerPage = config.Server.DefaultMaxPerPage
 	common.ServerInfo.DatabaseAddress = config.Server.DatabaseAddress
 	common.ServerInfo.DriverName = config.Server.DriverName
+	common.ServerInfo.SecretKey = config.Server.SecretKey
 
 	return nil
 }

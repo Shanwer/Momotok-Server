@@ -28,4 +28,6 @@ type serverModel struct {
 	DatabaseAddress string `yaml:"database_address"` //数据库链接语句
 
 	DriverName string `yaml:"driver_name"` //DriverName
+
+	SecretKey string `yaml:"secret_key"` //token secretkey
 }
