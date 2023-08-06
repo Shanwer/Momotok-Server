@@ -1,0 +1,14 @@
+server:
+  mode: release  #debug,release
+  host: localhost
+  port: 8080
+  enable_https: false
+  token_expire_second: 3600
+  preview_image_path: /path/to/preview_images
+  video_url_path: /path/to/videos
+  max_per_page: 15
+  database_address: mysql://user:password@localhost/dbname
+  driver_name: mysql
+  secret_key: testSecretKey
+
+
