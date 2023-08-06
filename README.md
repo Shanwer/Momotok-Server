@@ -103,4 +103,15 @@ create table likes
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (video_id) REFERENCES video(id)
 )ENGINE = InnoDB;
+
+create table comments
+(
+    id              int auto_increment primary key,
+    video_id        int ,
+    commenter_id    int ,
+    content         text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ,
+    create_date     timestamp default CURRENT_TIMESTAMP ,
+    FOREIGN KEY (commenter_id) REFERENCES user(id),
+    FOREIGN KEY (video_id) REFERENCES video(id)
+)ENGINE = InnoDB;
 ````

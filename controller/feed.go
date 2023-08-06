@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"Momotok-Server/rpc"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"io"
 	"net/http"
 	"time"
 )
@@ -52,7 +50,7 @@ func makeVideoList(page, perPage int) []Video {
 	for rows.Next() {
 		//循环读取直到列结束
 		var id int64
-		var author_id int
+		var author_id int64
 		var play_url string
 		var cover_url string
 		var favorite_count int64
@@ -71,27 +69,8 @@ func makeVideoList(page, perPage int) []Video {
 			isFavourite = true
 		}
 
-		resp, _ := rpc.HttpRequest("GET", "https://v1.hitokoto.cn/?c=a&c=d&c=i&c=k&encode=text", nil)
-		if resp.Body != nil {
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					fmt.Println(err)
-				}
-			}(resp.Body)
-		}
-		signature, _ := io.ReadAll(resp.Body)
-		user := User{
-			Signature:       string(signature),
-			Avatar:          "https://acg.suyanw.cn/sjtx/random.php",
-			BackgroundImage: "https://acg.suyanw.cn/api.php",
-		}
+		user, err := getUserFromdb(author_id)
 
-		row := db.QueryRow("SELECT id, username, work_count  FROM user WHERE id = ?", author_id)
-		err = row.Scan(&user.Id, &user.Name, &user.WorkCount)
-		if err != nil {
-			fmt.Println("Failed to scan row:", err)
-		}
 		video := Video{ //载入视频结构
 			Id:            id,
 			Author:        user,
