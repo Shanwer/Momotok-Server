@@ -2,6 +2,7 @@ package controller
 
 import (
 	"Momotok-Server/rpc"
+	"Momotok-Server/system"
 	"Momotok-Server/utils"
 	"crypto/sha256"
 	"database/sql"
@@ -13,8 +14,6 @@ import (
 	"net/http"
 	"strconv"
 )
-
-var staticUrl = "http://192.168.31.224:8080/static/" //TODO:be stored in the server config, it should be accessed freely by the front end application
 
 type VideoListResponse struct {
 	Response
@@ -34,7 +33,7 @@ func Publish(c *gin.Context) {
 	}
 
 	title := c.PostForm("title")
-	db, err := sql.Open("mysql", DatabaseAddress)
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 	}
@@ -60,8 +59,8 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	cover_url := staticUrl + "snapshot/" + file.Filename + ".jpg"
-	play_url := staticUrl + file.Filename
+	cover_url := system.ServerInfo.Server.StaticFileUrl + "snapshot/" + file.Filename + ".jpg"
+	play_url := system.ServerInfo.Server.StaticFileUrl + file.Filename
 
 	_, err = db.Exec("INSERT INTO video (author_id,title,favourite_count,comment_count,play_url,cover_url) VALUES (?,?,?,?,?,?)", uid, title, 0, 0, play_url, cover_url)
 	if err != nil { //duplicate username check
@@ -101,7 +100,7 @@ func PublishList(c *gin.Context) {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Unauthorized request"})
 		return
 	}
-	db, err := sql.Open("mysql", DatabaseAddress)
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
 	userId := c.Query("user_id")
 	parseIntID, _ := strconv.ParseInt(userId, 10, 64)
 	if err != nil {

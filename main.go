@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Momotok-Server/common"
 	"Momotok-Server/service"
 	"Momotok-Server/system"
 	"fmt"
@@ -13,10 +12,11 @@ func main() {
 	if err != nil {
 		fmt.Printf("Failed to load config information: %s\n", err)
 	}
-	println("Token secret key is:" + common.ServerInfo.SecretKey)
+	println("Config loaded!Token secret key is:" + system.ServerInfo.Server.SecretKey)
 
 	go service.RunMessageServer()
 	r := gin.Default()
+	gin.SetMode(system.ServerInfo.Server.Mode)
 	initRouter(r)
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"Momotok-Server/rpc"
+	"Momotok-Server/system"
 	"Momotok-Server/utils"
 	"database/sql"
 	"fmt"
@@ -13,9 +14,6 @@ import (
 	"net/http"
 	"strconv"
 )
-
-const DatabaseAddress string = "root:shanwer666@tcp(localhost:3306)/momotok" //SQL address(1024)
-//const DatabaseAddress string = "root:root@tcp(localhost:3306)/momotok" //SQL address(1024)
 
 // usersLoginInfo use map to store user info, token is created by jwt
 var usersLoginInfo = map[string]User{
@@ -43,7 +41,7 @@ func Register(c *gin.Context) {
 		fmt.Println("Hash password failed：", err)
 		return
 	}
-	db, err := sql.Open("mysql", DatabaseAddress)
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 	}
@@ -76,7 +74,7 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	db, err := sql.Open("mysql", DatabaseAddress)
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 	}
@@ -124,7 +122,7 @@ func UserInfo(c *gin.Context) {
 		BackgroundImage: "https://acg.suyanw.cn/api.php",
 	}
 
-	db, err := sql.Open("mysql", DatabaseAddress)
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
 	if err != nil {
 		fmt.Println("Database connected failed: ", err)
 		return

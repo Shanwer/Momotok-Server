@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"Momotok-Server/system"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -30,7 +31,7 @@ func Feed(c *gin.Context) {
 }
 
 func makeVideoList(page, perPage int) []Video {
-	db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 	//数据库表名为video，字段为id, author_id, play_url, cover_url, favorite_count, comment_count, is_favorite, title，&publish_time具体类型见下述定义
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
@@ -69,7 +70,7 @@ func makeVideoList(page, perPage int) []Video {
 			isFavourite = true
 		}
 
-		user, err := getUserFromdb(author_id)
+		user, err := getUserFromDB(author_id)
 
 		video := Video{ //载入视频结构
 			Id:            id,

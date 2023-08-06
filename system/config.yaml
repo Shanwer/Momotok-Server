@@ -1,0 +1,13 @@
+server:
+  mode: debug  #debug,release
+  host: localhost
+  port: 8080
+  enable_https: false
+  token_expire_second: 172800
+  static_file_url: http://192.168.31.224:8080/static/
+  max_per_page: 15
+  database_address: root:shanwer666@tcp(localhost:3306)/momotok
+  driver_name: mysql
+  secret_key: testSecretKey
+
+

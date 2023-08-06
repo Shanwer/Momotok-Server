@@ -1,13 +1,12 @@
 package utils
 
 import (
+	"Momotok-Server/system"
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
-
-const secretKey string = "testSecretKey"
 
 func GenerateToken(username string, uid int64) string {
 	// create a token object
@@ -16,17 +15,20 @@ func GenerateToken(username string, uid int64) string {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["userid"] = uid
 	claims["username"] = username
-	claims["exp"] = time.Now().Add(time.Hour * 48).Unix() // expired time is 48 hours
+	claims["exp"] = time.Now().Add(time.Hour * 48).Unix()
 
 	// generate toke string
-	tokenString, _ := token.SignedString([]byte(secretKey))
+	tokenString, _ := token.SignedString([]byte(system.ServerInfo.Server.SecretKey))
 
 	return tokenString
 }
 
 func CheckToken(tokenString string) bool {
+	if tokenString == "" {
+		return false
+	}
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil //secret key
+		return []byte(system.ServerInfo.Server.SecretKey), nil //secret key
 	})
 	if token.Valid {
 		//fmt.Println("token checked")
@@ -43,7 +45,7 @@ func GetUsername(tokenString string) (string, error) {
 	if CheckToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 返回签名密钥
-			return []byte(secretKey), nil
+			return []byte(system.ServerInfo.Server.SecretKey), nil
 		})
 		claims := token.Claims.(jwt.MapClaims)
 		username := claims["username"].(string)
@@ -58,7 +60,7 @@ func GetUID(tokenString string) (int64, error) {
 	if CheckToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 返回签名密钥
-			return []byte(secretKey), nil
+			return []byte(system.ServerInfo.Server.SecretKey), nil
 		})
 		claims := token.Claims.(jwt.MapClaims)
 		uid := int64(claims["userid"].(float64))
@@ -73,7 +75,7 @@ func GetUser(tokenString string) (int64, string, error) {
 	if CheckToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 返回签名密钥
-			return []byte(secretKey), nil
+			return []byte(system.ServerInfo.Server.SecretKey), nil
 		})
 		claims := token.Claims.(jwt.MapClaims)
 		uid := int64(claims["userid"].(float64))

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"Momotok-Server/rpc"
+	"Momotok-Server/system"
 	"Momotok-Server/utils"
 	"database/sql"
 	"fmt"
@@ -28,10 +29,10 @@ func CommentAction(c *gin.Context) {
 
 	Uid, err := utils.GetUID(token)
 	if err != nil {
-		fmt.Println("Get UID Error:", err)
+		fmt.Println("User doesn't exist", err)
 	}
 	var user User
-	user, err = getUserFromdb(Uid)
+	user, err = getUserFromDB(Uid)
 
 	if err != nil {
 		fmt.Println("Get User Struct Error:", err)
@@ -45,7 +46,7 @@ func CommentAction(c *gin.Context) {
 		currentTime := time.Now()
 		// 将时间格式化为 "MM-DD" 格式
 		currentDate := currentTime.Format("01-02")
-		db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
+		db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 		if err != nil {
 			fmt.Println("Failed to connect to database:", err)
 		}
@@ -67,7 +68,7 @@ func CommentAction(c *gin.Context) {
 			fmt.Println("Failed to get comment ID:", err)
 		}
 
-		fmt.Println("last insert id :", commentID)
+		//fmt.Println("last insert id :", commentID)
 		c.JSON(http.StatusOK, CommentActionResponse{Response: Response{StatusCode: 0},
 			Comment: Comment{
 				Id:         commentID,
@@ -76,11 +77,8 @@ func CommentAction(c *gin.Context) {
 				CreateDate: currentDate,
 			}})
 		return
-		}
-		c.JSON(http.StatusOK, Response{StatusCode: 0})
-	 else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
 	}
+	c.JSON(http.StatusOK, Response{StatusCode: 0})
 }
 
 // CommentList all videos have same demo comment list
@@ -98,7 +96,7 @@ func CommentList(c *gin.Context) {
 }
 
 func makeCommentList(videoID string) ([]Comment, error) {
-	db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
 	}
@@ -133,7 +131,7 @@ func makeCommentList(videoID string) ([]Comment, error) {
 		// 格式化时间为 MM-DD 的字符串
 		formattedDate := t.Format("01-02")
 
-		user, err := getUserFromdb(commenter_id)
+		user, err := getUserFromDB(commenter_id)
 
 		comment := Comment{ //载入评论结构
 			Id:         id,
@@ -146,7 +144,7 @@ func makeCommentList(videoID string) ([]Comment, error) {
 	return Comments, nil
 }
 
-func getUserFromdb(uid int64) (User, error) {
+func getUserFromDB(uid int64) (User, error) {
 	var user User
 	resp, _ := rpc.HttpRequest("GET", "https://v1.hitokoto.cn/?c=a&c=d&c=i&c=k&encode=text", nil)
 	if resp.Body != nil {
@@ -162,7 +160,7 @@ func getUserFromdb(uid int64) (User, error) {
 	user.Avatar = "https://acg.suyanw.cn/sjtx/random.php"
 	user.BackgroundImage = "https://acg.suyanw.cn/api.php"
 
-	db, err := sql.Open("mysql", DatabaseAddress) //连接数据库
+	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
 	}
