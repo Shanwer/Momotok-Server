@@ -23,10 +23,9 @@ func LoadConfigInformation() error {
 			Port                 string `yaml:"port"`
 			EnableHttps          bool   `yaml:"enable_https"`
 			TokenExpireSecond    int    `yaml:"token_expire_second"`
-			SystemStaticFilePath string `yaml:"system_static_file_path"`
+			PreviewImagePath     string `yaml:"preview_image_path"`
 			VideoUrlPath         string `yaml:"video_url_path"`
 			MaxPerPage           int    `yaml:"max_per_page"`
-			DefaultMaxPerPage    int    `yaml:"default_max_per_page"`
 			DatabaseAddress      string `yaml:"database_address"`
 			DriverName           string `yaml:"driver_name"`
 			SecretKey            string `yaml:"secret_key"`
@@ -43,10 +42,9 @@ func LoadConfigInformation() error {
 	common.ServerInfo.Port = config.Server.Port
 	common.ServerInfo.EnableHttps = config.Server.EnableHttps
 	common.ServerInfo.TokenExpireSecond = config.Server.TokenExpireSecond
-	common.ServerInfo.SystemStaticFilePath = config.Server.SystemStaticFilePath
+	common.ServerInfo.PreviewImagePath = config.Server.PreviewImagePath
 	common.ServerInfo.VideoUrlPath = config.Server.VideoUrlPath
 	common.ServerInfo.MaxPerPage = config.Server.MaxPerPage
-	common.ServerInfo.DefaultMaxPerPage = config.Server.DefaultMaxPerPage
 	common.ServerInfo.DatabaseAddress = config.Server.DatabaseAddress
 	common.ServerInfo.DriverName = config.Server.DriverName
 	common.ServerInfo.SecretKey = config.Server.SecretKey
