@@ -77,8 +77,8 @@ create table video
   author_id       int                                 null,
   play_url        varchar(255)                        null,
   cover_url       varchar(255)                        null,
-  favourite_count int                                 null,
-  comment_count   int                                 null,
+  favourite_count int           default 0             null,
+  comment_count   int           default 0             null,
   title           varchar(72)                         null,
   publish_time    timestamp default CURRENT_TIMESTAMP null,
   constraint cover_url

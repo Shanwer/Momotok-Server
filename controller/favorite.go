@@ -32,6 +32,7 @@ func FavoriteAction(c *gin.Context) {
 			_, err = db.Exec("INSERT INTO likes (video_id, user_id) VALUES (?, ?)", videoID, uid)
 			_, err = db.Exec("UPDATE user SET total_likes = total_likes + 1 where id = ?", uid)
 			_, err = db.Exec("UPDATE user SET total_received_likes = total_received_likes + 1 where id = ?", authorID)
+			_, err = db.Exec("UPDATE video SET favourite_count = video.favourite_count + 1 where id = ?", videoID)
 			c.JSON(http.StatusOK, UserResponse{
 				Response: Response{StatusCode: 0},
 			})
@@ -41,6 +42,7 @@ func FavoriteAction(c *gin.Context) {
 			_, err = db.Exec("DELETE FROM likes where id = ?", likeID)
 			_, err = db.Exec("UPDATE user SET total_likes = total_likes - 1 where id = ?", uid)
 			_, err = db.Exec("UPDATE user SET total_received_likes = total_received_likes - 1 where id = ?", authorID)
+			_, err = db.Exec("UPDATE video SET favourite_count = video.favourite_count - 1 where id = ?", videoID)
 			c.JSON(http.StatusOK, UserResponse{
 				Response: Response{StatusCode: 0},
 			})

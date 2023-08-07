@@ -17,7 +17,7 @@ type serverModel struct {
 
 	StaticFileUrl string `yaml:"static_file_url"` // system static file path
 
-	DefaultMaxPerPage int `yaml:"default_max_per_page"` //每页加载默认数目
+	MaxPerPage int `yaml:"max_per_page"` //每页加载默认数目
 
 	DatabaseAddress string `yaml:"database_address"` //数据库链接语句
 

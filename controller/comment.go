@@ -166,7 +166,7 @@ func getUserFromDB(uid int64) (User, error) {
 	}
 	defer db.Close()
 
-	row := db.QueryRow("SELECT id, username, work_count  FROM user WHERE id = ?", uid)
+	row := db.QueryRow("SELECT id, username, work_count FROM user WHERE id = ?", uid)
 	err = row.Scan(&user.Id, &user.Name, &user.WorkCount)
 	if err != nil {
 		fmt.Println("Failed to scan row:", err)
