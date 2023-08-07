@@ -21,7 +21,7 @@ go build && ./Momotok-Server
 * 服务器存在配置文件，在system的config.yaml中定义了
 
 ### 正在开发
-  1. extra apis - I
+  1. extra apis - II
 
 ### 目前进度
 - [x] basic apis
@@ -31,9 +31,9 @@ go build && ./Momotok-Server
   - [x] controller.Login
   - [x] controller.Publish
   - [x] controller.PublishList
-- [ ] extra apis - I
-  - [ ] apiRouter.POST("/favorite/action/", controller.FavoriteAction)
-  - [ ] apiRouter.GET("/favorite/list/", controller.FavoriteList)
+- [x] extra apis - I
+  - [x] apiRouter.POST("/favorite/action/", controller.FavoriteAction)
+  - [x] apiRouter.GET("/favorite/list/", controller.FavoriteList)
   - [x] apiRouter.POST("/comment/action/", controller.CommentAction)
   - [x] apiRouter.GET("/comment/list/", controller.CommentList)
 - [ ] extra apis - II
