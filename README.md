@@ -126,4 +126,13 @@ create index commenter_id
 
 create index video_id
   on comments (video_id);
+
+create table concern
+(
+  id              int auto_increment primary key,
+  concern_uid        int ,
+  concern_at_uid    int ,
+  FOREIGN KEY (concern_uid) REFERENCES user(id),
+  FOREIGN KEY (concern_at_uid) REFERENCES user(id)
+)ENGINE = InnoDB;
 ````
