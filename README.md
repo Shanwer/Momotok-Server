@@ -65,6 +65,8 @@ create table user
   total_received_likes int       default 0                 null,
   work_count           int       default 0                 null,
   total_likes          int       default 0                 null,
+  follow_count          int       default 0                 null,
+  follower_count          int       default 0                 null,
   constraint name
     unique (username)
 )
@@ -126,4 +128,13 @@ create index commenter_id
 
 create index video_id
   on comments (video_id);
+
+create table followerlist
+(
+  id              int auto_increment primary key,
+  follower_uid        int ,
+  followe_to_uid    int ,
+  FOREIGN KEY (follower_uid) REFERENCES user(id),
+  FOREIGN KEY (followe_to_uid) REFERENCES user(id)
+)ENGINE = InnoDB;
 ````
