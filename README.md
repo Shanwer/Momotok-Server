@@ -37,8 +37,8 @@ go build && ./Momotok-Server
   - [x] apiRouter.POST("/comment/action/", controller.CommentAction)
   - [x] apiRouter.GET("/comment/list/", controller.CommentList)
 - [ ] extra apis - II
-  - [ ] apiRouter.POST("/relation/action/", controller.RelationAction)
-  - [ ] apiRouter.GET("/relation/follow/list/", controller.FollowList)
+  - [x] apiRouter.POST("/relation/action/", controller.RelationAction)
+  - [x] apiRouter.GET("/relation/follow/list/", controller.FollowList)
   - [ ] apiRouter.GET("/relation/follower/list/", controller.FollowerList)
   - [ ] apiRouter.GET("/relation/friend/list/", controller.FriendList)
   - [ ] apiRouter.GET("/message/chat/", controller.MessageChat)
@@ -65,8 +65,8 @@ create table user
   total_received_likes int       default 0                 null,
   work_count           int       default 0                 null,
   total_likes          int       default 0                 null,
-  follow_count          int       default 0                 null,
-  follower_count          int       default 0                 null,
+  follow_count         int       default 0                 null,
+  follower_count       int       default 0                 null,
   constraint name
     unique (username)
 )
@@ -129,12 +129,12 @@ create index commenter_id
 create index video_id
   on comments (video_id);
 
-create table followerlist
+create table follow_list
 (
-  id              int auto_increment primary key,
+  id                  int auto_increment primary key,
   follower_uid        int ,
-  followe_to_uid    int ,
+  following_uid       int ,
   FOREIGN KEY (follower_uid) REFERENCES user(id),
-  FOREIGN KEY (followe_to_uid) REFERENCES user(id)
+  FOREIGN KEY (following_uid) REFERENCES user(id)
 )ENGINE = InnoDB;
 ````

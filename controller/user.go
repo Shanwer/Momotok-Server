@@ -100,6 +100,10 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	uid := c.Query("user_id")
 	if !utils.CheckToken(c.Query("token")) {
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "Invalid token",
+		})
 		return
 	}
 
