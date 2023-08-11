@@ -17,7 +17,7 @@ type UserListResponse struct {
 	UserList []User `json:"user_list"`
 }
 
-// RelationAction no practical effect, just check if token is valid
+// RelationAction handles follow and unfollow action
 func RelationAction(c *gin.Context) {
 	token := c.Query("token")
 	to_user_id := c.Query("to_user_id")
@@ -46,7 +46,7 @@ func RelationAction(c *gin.Context) {
 		fmt.Println("Database connected failed: ", err)
 	}
 
-	if action_type == "关注" {
+	if action_type == "1" {
 		err = db.QueryRow("select  id from followerlist where `follower_uid` = ? AND `followe_to_uid` = ?", uid, to_user_id).Scan(&id)
 		if err != nil && err.Error() != "sql: no rows in result set" {
 			c.JSON(http.StatusOK, Response{
@@ -69,7 +69,7 @@ func RelationAction(c *gin.Context) {
 			})
 			return
 		}
-	} else if action_type == "取消关注" {
+	} else if action_type == "2" {
 		err = db.QueryRow("select  id from followerlist where `follower_uid` = ? AND `followe_to_uid` = ?", uid, to_user_id).Scan(&id)
 		if err != nil && err.Error() != "sql: no rows in result set" {
 			c.JSON(http.StatusOK, Response{
@@ -100,7 +100,7 @@ func RelationAction(c *gin.Context) {
 	return
 }
 
-// FollowList all users have same follow list
+// FollowList provides user with follow list
 func FollowList(c *gin.Context) {
 	uid := c.Query("user_id")
 	if !utils.CheckToken(c.Query("token")) {
