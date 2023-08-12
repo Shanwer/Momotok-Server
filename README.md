@@ -21,7 +21,7 @@ go build && ./Momotok-Server
 * 服务器存在配置文件，在system的config.yaml中定义了
 
 ### 正在开发
-  1. extra apis - II
+  1. extra apis - II Message Server
 
 ### 目前进度
 - [x] basic apis
@@ -39,8 +39,8 @@ go build && ./Momotok-Server
 - [ ] extra apis - II
   - [x] apiRouter.POST("/relation/action/", controller.RelationAction)
   - [x] apiRouter.GET("/relation/follow/list/", controller.FollowList)
-  - [ ] apiRouter.GET("/relation/follower/list/", controller.FollowerList)
-  - [ ] apiRouter.GET("/relation/friend/list/", controller.FriendList)
+  - [x] apiRouter.GET("/relation/follower/list/", controller.FollowerList)
+  - [x] apiRouter.GET("/relation/friend/list/", controller.FriendList)
   - [ ] apiRouter.GET("/message/chat/", controller.MessageChat)
   - [ ] apiRouter.POST("/message/action/", controller.MessageAction) 
 
