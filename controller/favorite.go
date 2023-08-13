@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"Momotok-Server/model"
 	"Momotok-Server/rpc"
 	"Momotok-Server/system"
 	"Momotok-Server/utils"
@@ -34,7 +35,7 @@ func FavoriteAction(c *gin.Context) {
 			_, err = db.Exec("UPDATE user SET total_received_likes = total_received_likes + 1 where id = ?", authorID)
 			_, err = db.Exec("UPDATE video SET favourite_count = video.favourite_count + 1 where id = ?", videoID)
 			c.JSON(http.StatusOK, UserResponse{
-				Response: Response{StatusCode: 0},
+				Response: model.Response{StatusCode: 0},
 			})
 			return
 		} else if likeID != 0 && actionType == "2" {
@@ -44,14 +45,14 @@ func FavoriteAction(c *gin.Context) {
 			_, err = db.Exec("UPDATE user SET total_received_likes = total_received_likes - 1 where id = ?", authorID)
 			_, err = db.Exec("UPDATE video SET favourite_count = video.favourite_count - 1 where id = ?", videoID)
 			c.JSON(http.StatusOK, UserResponse{
-				Response: Response{StatusCode: 0},
+				Response: model.Response{StatusCode: 0},
 			})
 			return
 		}
 	} else {
 		//check token or getUID returns err
 		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "Invalid request"},
+			Response: model.Response{StatusCode: 1, StatusMsg: "Invalid request"},
 		})
 		return
 
@@ -61,7 +62,7 @@ func FavoriteAction(c *gin.Context) {
 // FavoriteList shows user's liked videos
 func FavoriteList(c *gin.Context) {
 	if !utils.CheckToken(c.Query("token")) {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Unauthorized request"})
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "Unauthorized request"})
 		return
 	}
 	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
@@ -79,9 +80,9 @@ func FavoriteList(c *gin.Context) {
 			}
 		}(resp.Body)
 	}
-	videoList := make([]Video, 0)
+	videoList := make([]model.Video, 0)
 	signature, _ := io.ReadAll(resp.Body)
-	var user = User{
+	var user = model.User{
 		Id:              parseIntID,
 		Signature:       string(signature),
 		Avatar:          "https://acg.suyanw.cn/sjtx/random.php",
@@ -99,7 +100,7 @@ func FavoriteList(c *gin.Context) {
 		var favoriteCount int64
 		var commentCount int64
 		var title string
-		err := rows.Scan(&videoId, &playUrl, &coverUrl, &favoriteCount, &commentCount, &title, &user.Name, &user.TotalReceivedLikes, &user.WorkCount, &user.TotalLikes)
+		err := rows.Scan(&videoId, &playUrl, &coverUrl, &favoriteCount, &commentCount, &title, &user.Name, &user.TotalFavorited, &user.WorkCount, &user.FavoriteCount)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
 			continue
@@ -110,7 +111,7 @@ func FavoriteList(c *gin.Context) {
 		if likedID != 0 {
 			isFavourite = true
 		}
-		video := Video{ //载入视频结构
+		video := model.Video{ //载入视频结构
 			Id:            videoId,
 			Author:        user,
 			PlayUrl:       playUrl,
@@ -123,7 +124,7 @@ func FavoriteList(c *gin.Context) {
 	}
 	defer rows.Close()
 	c.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
+		Response: model.Response{
 			StatusCode: 0,
 		},
 		VideoList: videoList,

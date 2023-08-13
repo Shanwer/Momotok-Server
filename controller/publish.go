@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"Momotok-Server/model"
 	"Momotok-Server/rpc"
 	"Momotok-Server/system"
 	"Momotok-Server/utils"
@@ -16,8 +17,8 @@ import (
 )
 
 type VideoListResponse struct {
-	Response
-	VideoList []Video `json:"video_list"`
+	model.Response
+	VideoList []model.Video `json:"video_list"`
 }
 
 // Publish function that check token then save upload file to public directory
@@ -25,7 +26,7 @@ func Publish(c *gin.Context) {
 	tokenString := c.PostForm("token")
 	uid, err := utils.GetUID(tokenString)
 	if err != nil {
-		c.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, model.Response{
 			StatusCode: 1,
 			StatusMsg:  "invalid token",
 		})
@@ -45,7 +46,7 @@ func Publish(c *gin.Context) {
 	file.Filename = hashFileName(file.Filename)
 	err = c.SaveUploadedFile(file, "./public/"+file.Filename)
 	if err != nil {
-		c.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, model.Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
 		})
@@ -53,7 +54,7 @@ func Publish(c *gin.Context) {
 	}
 	_, err = utils.GetSnapshot("./public/"+file.Filename, "./public/snapshot/"+file.Filename, 1) //get the first frame of the video
 	if err != nil {
-		c.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, model.Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
 		})
@@ -70,7 +71,7 @@ func Publish(c *gin.Context) {
 		}
 		if mysqlErr.Number == 1062 {
 			c.JSON(http.StatusOK, UserResponse{
-				Response: Response{StatusCode: 1, StatusMsg: "Video already exists!"},
+				Response: model.Response{StatusCode: 1, StatusMsg: "Video already exists!"},
 			})
 		} else {
 			fmt.Println("Upload failed：", err)
@@ -81,14 +82,14 @@ func Publish(c *gin.Context) {
 	_, err = db.Exec("UPDATE user SET work_count = work_count + 1 where id = ?", uid)
 
 	if err != nil {
-		c.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, model.Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, Response{
+	c.JSON(http.StatusOK, model.Response{
 		StatusCode: 0,
 		StatusMsg:  "success",
 	})
@@ -97,7 +98,7 @@ func Publish(c *gin.Context) {
 // PublishList shows user's published videos
 func PublishList(c *gin.Context) {
 	if !utils.CheckToken(c.Query("token")) {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Unauthorized request"})
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "Unauthorized request"})
 		return
 	}
 	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
@@ -117,14 +118,14 @@ func PublishList(c *gin.Context) {
 		}(resp.Body)
 	}
 	signature, _ := io.ReadAll(resp.Body)
-	var user = User{
+	var user = model.User{
 		Id:              parseIntID,
 		Signature:       string(signature),
 		Avatar:          "https://acg.suyanw.cn/sjtx/random.php",
 		BackgroundImage: "https://acg.suyanw.cn/api.php",
 	}
-	rows, err := db.Query("select video.id, play_url, cover_url, favourite_count, comment_count, title, user.username, user.total_received_likes, user.work_count, user.total_likes FROM video JOIN user ON video.author_id = user.id where author_id = ? ", parseIntID)
-	videoList := make([]Video, 0)
+	rows, err := db.Query("select video.id, play_url, cover_url, favourite_count, comment_count, title, user.username, user.total_received_likes, user.work_count, user.total_likes, user.follow_count, user.follower_count FROM video JOIN user ON video.author_id = user.id where author_id = ? ", parseIntID)
+	videoList := make([]model.Video, 0)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -136,7 +137,7 @@ func PublishList(c *gin.Context) {
 		var favoriteCount int64
 		var commentCount int64
 		var title string
-		err := rows.Scan(&videoId, &playUrl, &coverUrl, &favoriteCount, &commentCount, &title, &user.Name, &user.TotalReceivedLikes, &user.WorkCount, &user.TotalLikes)
+		err := rows.Scan(&videoId, &playUrl, &coverUrl, &favoriteCount, &commentCount, &title, &user.Name, &user.TotalFavorited, &user.WorkCount, &user.FavoriteCount, &user.FollowCount, &user.FollowerCount)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
 			continue
@@ -147,7 +148,7 @@ func PublishList(c *gin.Context) {
 		if likedID != 0 {
 			isFavourite = true
 		}
-		video := Video{ //载入视频结构
+		video := model.Video{ //载入视频结构
 			Id:            videoId,
 			Author:        user,
 			PlayUrl:       playUrl,
@@ -161,7 +162,7 @@ func PublishList(c *gin.Context) {
 	defer rows.Close()
 
 	c.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
+		Response: model.Response{
 			StatusCode: 0,
 		},
 		VideoList: videoList,

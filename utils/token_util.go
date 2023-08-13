@@ -71,7 +71,7 @@ func GetUID(tokenString string) (int64, error) {
 	}
 }
 
-func GetUser(tokenString string) (int64, string, error) {
+func GetUserFromToken(tokenString string) (int64, string, error) {
 	if CheckToken(tokenString) {
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 返回签名密钥

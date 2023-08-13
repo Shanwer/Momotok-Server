@@ -1,7 +1,7 @@
 package service
 
 import (
-	"Momotok-Server/controller"
+	"Momotok-Server/model"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -43,7 +43,7 @@ func process(conn net.Conn) {
 			continue
 		}
 
-		var event = controller.MessageSendEvent{}
+		var event = model.MessageSendEvent{}
 		_ = json.Unmarshal(buf[:n], &event)
 		fmt.Printf("Receive Message：%+v\n", event)
 
@@ -60,7 +60,7 @@ func process(conn net.Conn) {
 			continue
 		}
 
-		pushEvent := controller.MessagePushEvent{
+		pushEvent := model.MessagePushEvent{
 			FromUserId: event.UserId,
 			MsgContent: event.MsgContent,
 		}

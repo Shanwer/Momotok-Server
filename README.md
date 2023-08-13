@@ -22,6 +22,7 @@ go build && ./Momotok-Server
 
 ### 正在开发
   1. extra apis - II Message Server
+  2. 代码与数据库优化 
 
 ### 目前进度
 - [x] basic apis

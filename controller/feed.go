@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"Momotok-Server/model"
 	"Momotok-Server/system"
 	"Momotok-Server/utils"
 	"database/sql"
@@ -12,9 +13,9 @@ import (
 )
 
 type FeedResponse struct {
-	Response
-	VideoList []Video `json:"video_list,omitempty"`
-	NextTime  int64   `json:"next_time,omitempty"`
+	model.Response
+	VideoList []model.Video `json:"video_list,omitempty"`
+	NextTime  int64         `json:"next_time,omitempty"`
 }
 
 var currentPage = 1 //全局变量记录当前page
@@ -25,7 +26,7 @@ func Feed(c *gin.Context) { // 默认每页加载 15 个视频
 	if tokenString == "" {
 		videos := makeGuestVideoList(currentPage, system.ServerInfo.Server.MaxPerPage)
 		c.JSON(http.StatusOK, FeedResponse{
-			Response:  Response{StatusCode: 0},
+			Response:  model.Response{StatusCode: 0},
 			VideoList: videos,
 			NextTime:  time.Now().Unix(),
 		})
@@ -33,7 +34,7 @@ func Feed(c *gin.Context) { // 默认每页加载 15 个视频
 		uid, _ := utils.GetUID(tokenString) //调用方法返回视频列表
 		videos := makeVideoList(currentPage, system.ServerInfo.Server.MaxPerPage, uid)
 		c.JSON(http.StatusOK, FeedResponse{
-			Response:  Response{StatusCode: 0},
+			Response:  model.Response{StatusCode: 0},
 			VideoList: videos,
 			NextTime:  time.Now().Unix(),
 		})
@@ -42,7 +43,7 @@ func Feed(c *gin.Context) { // 默认每页加载 15 个视频
 	currentPage++
 }
 
-func makeGuestVideoList(page, perPage int) []Video {
+func makeGuestVideoList(page, perPage int) []model.Video {
 	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
@@ -57,31 +58,34 @@ func makeGuestVideoList(page, perPage int) []Video {
 		return nil
 	}
 	defer rows.Close()
-	videos := make([]Video, 0) //创建视频列表
+	videos := make([]model.Video, 0) //创建视频列表
 	isLast := 0
 	for rows.Next() {
 		//循环读取直到列结束
-		var id int64
-		var author_id int64
-		var play_url string
-		var cover_url string
-		var favorite_count int64
-		var comment_count int64
+		var videoID int64
+		var authorID int64
+		var playUrl string
+		var coverUrl string
+		var favoriteCount int64
+		var commentCount int64
 		var title string
-		err := rows.Scan(&id, &author_id, &play_url, &cover_url, &favorite_count, &comment_count, &title)
+		err := rows.Scan(&videoID, &authorID, &playUrl, &coverUrl, &favoriteCount, &commentCount, &title)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
 			continue
 		}
-		user, err := getUserFromDB(author_id)
-
-		video := Video{ //载入视频结构
-			Id:            id,
+		user, err := utils.GetUserStruct(authorID)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+		video := model.Video{ //载入视频结构
+			Id:            videoID,
 			Author:        user,
-			PlayUrl:       play_url,
-			CoverUrl:      cover_url,
-			FavoriteCount: favorite_count,
-			CommentCount:  comment_count,
+			PlayUrl:       playUrl,
+			CoverUrl:      coverUrl,
+			FavoriteCount: favoriteCount,
+			CommentCount:  commentCount,
 			IsFavorite:    false,
 			Title:         title,
 		}
@@ -94,7 +98,7 @@ func makeGuestVideoList(page, perPage int) []Video {
 	return videos //返回视频列表
 }
 
-func makeVideoList(page, perPage int, uid int64) []Video {
+func makeVideoList(page, perPage int, uid int64) []model.Video {
 	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
@@ -109,7 +113,7 @@ func makeVideoList(page, perPage int, uid int64) []Video {
 		return nil
 	}
 	defer rows.Close()
-	videos := make([]Video, 0) //创建视频列表
+	videos := make([]model.Video, 0) //创建视频列表
 	isLast := 0
 	for rows.Next() {
 		//循环读取直到列结束
@@ -133,9 +137,12 @@ func makeVideoList(page, perPage int, uid int64) []Video {
 			isFavourite = true
 		}
 
-		user, err := getUserFromDB(author_id)
-
-		video := Video{ //载入视频结构
+		user, err := utils.GetUserStruct(author_id)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+		video := model.Video{ //载入视频结构
 			Id:            id,
 			Author:        user,
 			PlayUrl:       play_url,

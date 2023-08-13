@@ -1,25 +1,24 @@
 package controller
 
 import (
-	"Momotok-Server/rpc"
+	"Momotok-Server/model"
 	"Momotok-Server/system"
 	"Momotok-Server/utils"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"io"
 	"net/http"
 	"time"
 )
 
 type CommentListResponse struct {
-	Response
-	CommentList []Comment `json:"comment_list,omitempty"`
+	model.Response
+	CommentList []model.Comment `json:"comment_list,omitempty"`
 }
 
 type CommentActionResponse struct {
-	Response
-	Comment Comment `json:"comment,omitempty"`
+	model.Response
+	Comment model.Comment `json:"comment,omitempty"`
 }
 
 // CommentAction no practical effect, just check if token is valid
@@ -31,11 +30,12 @@ func CommentAction(c *gin.Context) {
 	if err != nil {
 		fmt.Println("User doesn't exist", err)
 	}
-	var user User
-	user, err = getUserFromDB(Uid)
+	var user model.User
+	user, err = utils.GetUserStruct(Uid)
 
 	if err != nil {
 		fmt.Println("Get User Struct Error:", err)
+		return
 	}
 
 	videoID := c.Query("video_id")
@@ -69,8 +69,8 @@ func CommentAction(c *gin.Context) {
 		}
 
 		//fmt.Println("last insert id :", commentID)
-		c.JSON(http.StatusOK, CommentActionResponse{Response: Response{StatusCode: 0},
-			Comment: Comment{
+		c.JSON(http.StatusOK, CommentActionResponse{Response: model.Response{StatusCode: 0},
+			Comment: model.Comment{
 				Id:         commentID,
 				User:       user,
 				Content:    text,
@@ -78,7 +78,7 @@ func CommentAction(c *gin.Context) {
 			}})
 		return
 	}
-	c.JSON(http.StatusOK, Response{StatusCode: 0})
+	c.JSON(http.StatusOK, model.Response{StatusCode: 0})
 }
 
 // CommentList all videos have same demo comment list
@@ -87,15 +87,16 @@ func CommentList(c *gin.Context) {
 	Comments, err := makeCommentList(videoID)
 	if err != nil {
 		fmt.Println("Make CommentList Error:", err)
+		return
 	}
 
 	c.JSON(http.StatusOK, CommentListResponse{
-		Response:    Response{StatusCode: 0},
+		Response:    model.Response{StatusCode: 0},
 		CommentList: Comments,
 	})
 }
 
-func makeCommentList(videoID string) ([]Comment, error) {
+func makeCommentList(videoID string) ([]model.Comment, error) {
 	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
@@ -108,21 +109,21 @@ func makeCommentList(videoID string) ([]Comment, error) {
 	}
 
 	defer rows.Close()
-	Comments := make([]Comment, 0) //创建视频列表
+	Comments := make([]model.Comment, 0) //创建视频列表
 	for rows.Next() {
 		//循环读取直到列结束
 		var id int64
-		var video_id int64
-		var commenter_id int64
+		var videoID int64
+		var commenterID int64
 		var content string
-		var create_date string
-		err := rows.Scan(&id, &video_id, &commenter_id, &content, &create_date)
+		var createDate string
+		err := rows.Scan(&id, &videoID, &commenterID, &content, &createDate)
 		if err != nil {
 			fmt.Println("Failed to scan row:", err)
 			continue
 		}
 
-		t, err := time.Parse("2006-01-02 15:04:05", create_date)
+		t, err := time.Parse("2006-01-02 15:04:05", createDate)
 		if err != nil {
 			fmt.Println("Failed to parse timestamp:", err)
 			continue
@@ -131,9 +132,11 @@ func makeCommentList(videoID string) ([]Comment, error) {
 		// 格式化时间为 MM-DD 的字符串
 		formattedDate := t.Format("01-02")
 
-		user, err := getUserFromDB(commenter_id)
-
-		comment := Comment{ //载入评论结构
+		user, err := utils.GetUserStruct(commenterID)
+		if err != nil {
+			return nil, err
+		}
+		comment := model.Comment{ //载入评论结构
 			Id:         id,
 			User:       user,
 			Content:    content,
@@ -142,34 +145,4 @@ func makeCommentList(videoID string) ([]Comment, error) {
 		Comments = append(Comments, comment)
 	}
 	return Comments, nil
-}
-
-func getUserFromDB(uid int64) (User, error) {
-	var user User
-	resp, _ := rpc.HttpRequest("GET", "https://v1.hitokoto.cn/?c=a&c=d&c=i&c=k&encode=text", nil)
-	if resp.Body != nil {
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
-		}(resp.Body)
-	}
-	signature, _ := io.ReadAll(resp.Body)
-	user.Signature = string(signature)
-	user.Avatar = "https://acg.suyanw.cn/sjtx/random.php"
-	user.BackgroundImage = "https://acg.suyanw.cn/api.php"
-
-	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
-	if err != nil {
-		fmt.Println("Failed to connect to database:", err)
-	}
-	defer db.Close()
-
-	row := db.QueryRow("SELECT id, username, work_count FROM user WHERE id = ?", uid)
-	err = row.Scan(&user.Id, &user.Name, &user.WorkCount)
-	if err != nil {
-		fmt.Println("Failed to scan row:", err)
-	}
-	return user, nil
 }

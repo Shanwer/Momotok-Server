@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"Momotok-Server/rpc"
+	"Momotok-Server/model"
 	"Momotok-Server/system"
 	"Momotok-Server/utils"
 	"database/sql"
@@ -10,25 +10,24 @@ import (
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
-	"io"
 	"net/http"
 	"strconv"
 )
 
 // usersLoginInfo use map to store user info, token is created by jwt
-var usersLoginInfo = map[string]User{
+var usersLoginInfo = map[string]model.User{
 	//TODO:其他模块需要改写为从数据库中获取
 }
 
 type UserLoginResponse struct {
-	Response
+	model.Response
 	UserId int64  `json:"user_id,omitempty"`
 	Token  string `json:"token"`
 }
 
 type UserResponse struct {
-	Response
-	User User `json:"user"`
+	model.Response
+	User model.User `json:"user"`
 }
 
 func Register(c *gin.Context) {
@@ -53,7 +52,7 @@ func Register(c *gin.Context) {
 		}
 		if mysqlErr.Number == 1062 {
 			c.JSON(http.StatusOK, UserResponse{
-				Response: Response{StatusCode: 1, StatusMsg: "User:" + username + "already exists!"},
+				Response: model.Response{StatusCode: 1, StatusMsg: "User:" + username + "already exists!"},
 			})
 		} else {
 			fmt.Println("Register failed：", err)
@@ -65,7 +64,7 @@ func Register(c *gin.Context) {
 	token := utils.GenerateToken(username, id)
 
 	c.JSON(http.StatusOK, UserLoginResponse{
-		Response: Response{StatusCode: 0},
+		Response: model.Response{StatusCode: 0},
 		UserId:   id,
 		Token:    token,
 	})
@@ -85,13 +84,13 @@ func Login(c *gin.Context) {
 	if err != nil {
 		//fmt.Println("Wrong username or password: ", err)
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "Wrong username or password"},
+			Response: model.Response{StatusCode: 1, StatusMsg: "Wrong username or password"},
 		})
 		return
 	}
 	token := utils.GenerateToken(username, id)
 	c.JSON(http.StatusOK, UserLoginResponse{
-		Response: Response{StatusCode: 0},
+		Response: model.Response{StatusCode: 0},
 		UserId:   id,
 		Token:    token,
 	})
@@ -100,50 +99,22 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	uid := c.Query("user_id")
 	if !utils.CheckToken(c.Query("token")) {
-		c.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, model.Response{
 			StatusCode: 1,
 			StatusMsg:  "Invalid token",
 		})
 		return
 	}
-
-	resp, _ := rpc.HttpRequest("GET", "https://v1.hitokoto.cn/?c=a&c=d&c=i&c=k&encode=text", nil)
-	if resp.Body != nil {
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
-		}(resp.Body)
-	}
-	signature, _ := io.ReadAll(resp.Body)
-
 	id, _ := strconv.ParseInt(uid, 10, 64)
-	userInfo := User{
-		Id:              id,
-		Signature:       string(signature),
-		Avatar:          "https://acg.suyanw.cn/sjtx/random.php",
-		BackgroundImage: "https://acg.suyanw.cn/api.php",
-	}
-
-	db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
+	user, err := utils.GetUserStruct(id)
 	if err != nil {
-		fmt.Println("Database connected failed: ", err)
+		fmt.Println(err)
 		return
 	}
-	err = db.QueryRow("SELECT username FROM user WHERE id = ?", uid).Scan(&userInfo.Name)
-	if err != nil {
-		println(err.Error())
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "user not found"},
-		})
-		return
-	}
-
 	c.JSON(http.StatusOK, gin.H{
 		"status_code": 0,
 		"status_msg":  "Success",
-		"user":        userInfo,
+		"user":        user,
 	})
 	return
 }
