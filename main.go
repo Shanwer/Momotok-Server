@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Momotok-Server/service"
 	"Momotok-Server/system"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,6 @@ func main() {
 	}
 	println("Config loaded!Token secret key is:" + system.ServerInfo.Server.SecretKey)
 
-	go service.RunMessageServer()
 	r := gin.Default()
 	gin.SetMode(system.ServerInfo.Server.Mode)
 	initRouter(r)

@@ -21,8 +21,7 @@ go build && ./Momotok-Server
 * 服务器存在配置文件，在system的config.yaml中定义了
 
 ### 正在开发
-  1. extra apis - II Message Server
-  2. 代码与数据库优化 
+ 1. 代码与数据库优化 
 
 ### 目前进度
 - [x] basic apis
@@ -37,13 +36,13 @@ go build && ./Momotok-Server
   - [x] apiRouter.GET("/favorite/list/", controller.FavoriteList)
   - [x] apiRouter.POST("/comment/action/", controller.CommentAction)
   - [x] apiRouter.GET("/comment/list/", controller.CommentList)
-- [ ] extra apis - II
+- [x] extra apis - II
   - [x] apiRouter.POST("/relation/action/", controller.RelationAction)
   - [x] apiRouter.GET("/relation/follow/list/", controller.FollowList)
   - [x] apiRouter.GET("/relation/follower/list/", controller.FollowerList)
   - [x] apiRouter.GET("/relation/friend/list/", controller.FriendList)
-  - [ ] apiRouter.GET("/message/chat/", controller.MessageChat)
-  - [ ] apiRouter.POST("/message/action/", controller.MessageAction) 
+  - [x] apiRouter.GET("/message/chat/", controller.MessageChat)
+  - [x] apiRouter.POST("/message/action/", controller.MessageAction) 
 
 ### 测试
 
@@ -138,4 +137,19 @@ create table follow_list
   FOREIGN KEY (follower_uid) REFERENCES user(id),
   FOREIGN KEY (following_uid) REFERENCES user(id)
 )ENGINE = InnoDB;
+
+create table messages
+(
+  id           int auto_increment
+    primary key,
+  sender_id    int                                 null,
+  retriever_id int                                 null,
+  created_at   timestamp default CURRENT_TIMESTAMP not null comment 'created_at',
+  message      text                                null,
+  constraint messages_retriever_fk
+    foreign key (retriever_id) references user (id),
+  constraint messages_sender_fk
+    foreign key (sender_id) references user (id)
+)
+  engine = InnoDB;
 ````

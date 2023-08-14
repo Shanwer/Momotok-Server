@@ -2,69 +2,81 @@ package controller
 
 import (
 	"Momotok-Server/model"
+	"Momotok-Server/system"
+	"Momotok-Server/utils"
+	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
-	"sync/atomic"
 	"time"
 )
-
-var tempChat = map[string][]model.Message{}
-
-var messageIdSequence = int64(1)
 
 type ChatResponse struct {
 	model.Response
 	MessageList []model.Message `json:"message_list"`
 }
 
-// MessageAction no practical effect, just check if token is valid
+// MessageAction handles sending message
 func MessageAction(c *gin.Context) {
-	token := c.Query("token")
+	tokenString := c.Query("token")
 	toUserId := c.Query("to_user_id")
 	content := c.Query("content")
-
-	if user, exist := usersLoginInfo[token]; exist {
-		userIdB, _ := strconv.Atoi(toUserId)
-		chatKey := genChatKey(user.Id, int64(userIdB))
-
-		atomic.AddInt64(&messageIdSequence, 1)
-		curMessage := model.Message{
-			Id:         messageIdSequence,
-			Content:    content,
-			CreateTime: time.Now().Format(time.Kitchen),
+	actionType := c.Query("action_type")
+	if senderUID, err := utils.GetUID(tokenString); err == nil && actionType == "1" {
+		db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress)
+		if err != nil {
+			fmt.Println("Database connected failed: ", err)
+			return
 		}
-
-		if messages, exist := tempChat[chatKey]; exist {
-			tempChat[chatKey] = append(messages, curMessage)
-		} else {
-			tempChat[chatKey] = []model.Message{curMessage}
-		}
+		db.Exec("INSERT INTO messages(sender_id, retriever_id, message) value(?, ?, ?)", senderUID, toUserId, content)
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
+		return
 	} else {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "Invalid request"})
+		return
 	}
 }
 
-// MessageChat all users have same follow list
+// MessageChat provides user with message list
 func MessageChat(c *gin.Context) {
-	token := c.Query("token")
+	tokenString := c.Query("token")
 	toUserId := c.Query("to_user_id")
-
-	if user, exist := usersLoginInfo[token]; exist {
-		userIdB, _ := strconv.Atoi(toUserId)
-		chatKey := genChatKey(user.Id, int64(userIdB))
-
-		c.JSON(http.StatusOK, ChatResponse{Response: model.Response{StatusCode: 0}, MessageList: tempChat[chatKey]})
+	var msgList = make([]model.Message, 0)
+	if utils.CheckToken(tokenString) {
+		db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
+		rows, err := db.Query("SELECT * FROM messages WHERE retriever_id = ?", toUserId)
+		if err != nil {
+			fmt.Println("Failed to connect to database:", err)
+		}
+		for rows.Next() {
+			var id int64
+			var toUserID int64
+			var fromUserID int64
+			var content string
+			var createdTime string
+			err := rows.Scan(&id, &fromUserID, &toUserID, &createdTime, &content)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			t, err := time.Parse("2006-01-02 15:04:05", createdTime)
+			msgStruct := model.Message{
+				Content:    content,
+				CreateTime: t.Unix(),
+				FromUserID: fromUserID,
+				ID:         id,
+				ToUserID:   toUserID,
+			}
+			msgList = append(msgList, msgStruct)
+		}
+		c.JSON(http.StatusOK, ChatResponse{
+			Response:    model.Response{StatusCode: 0},
+			MessageList: msgList,
+		})
 	} else {
-		c.JSON(http.StatusOK, model.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		c.JSON(http.StatusOK, model.Response{
+			StatusCode: 1,
+			StatusMsg:  "Invalid token",
+		})
 	}
-}
-
-func genChatKey(userIdA int64, userIdB int64) string {
-	if userIdA > userIdB {
-		return fmt.Sprintf("%d_%d", userIdB, userIdA)
-	}
-	return fmt.Sprintf("%d_%d", userIdA, userIdB)
 }
