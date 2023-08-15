@@ -42,9 +42,9 @@ func MessageChat(c *gin.Context) {
 	toUserId := c.Query("to_user_id")
 	preMsgTime := c.Query("pre_msg_time")
 	var msgList = make([]model.Message, 0)
-	if utils.CheckToken(tokenString) {
+	if uid, err := utils.GetUID(tokenString); err == nil {
 		db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
-		rows, err := db.Query("SELECT * FROM messages WHERE retriever_id = ?AND created_at < ?", toUserId, preMsgTime)
+		rows, err := db.Query("SELECT * FROM messages WHERE ((retriever_id = ? AND sender_id = ?) OR (retriever_id = ? AND sender_id = ?)) AND created_at > ?", toUserId, uid, uid, toUserId, preMsgTime)
 		if err != nil {
 			fmt.Println("Failed to connect to database:", err)
 		}
@@ -72,6 +72,13 @@ func MessageChat(c *gin.Context) {
 			Response:    model.Response{StatusCode: 0},
 			MessageList: msgList,
 		})
+		defer func(db *sql.DB) {
+			err := db.Close()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}(db)
 	} else {
 		c.JSON(http.StatusOK, model.Response{
 			StatusCode: 1,

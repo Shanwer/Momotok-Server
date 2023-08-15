@@ -255,7 +255,7 @@ func FriendList(c *gin.Context) {
 			log.Fatal(err)
 		}
 
-		userList, err = utils.GetUserList(friendUID)
+		userInfo, err := utils.GetUserStruct(friendUID)
 		if err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				StatusCode: 1,
@@ -263,6 +263,7 @@ func FriendList(c *gin.Context) {
 			})
 			return
 		}
+		userList = append(userList, userInfo)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"status_code": 0,
