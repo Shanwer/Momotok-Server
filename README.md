@@ -6,22 +6,22 @@
 
 工程除了go.mod包含的依赖外，还使用ffmpeg以生成视频缩略图，需要另外安装并配置进%path%在服务器上  
 ffmpeg地址:https://ffbinaries.com/downloads  
-其中go-ffmpeg为私人库，开发时不一定能同步到依赖，需要手动操作
+其中go-ffmpeg为私人库，编译或开发时不一定能同步到依赖，需要手动操作
 
 ```shell
 go build && ./Momotok-Server
 ```
+### 快速开始
+release中已发布第一个稳定可用版本，解压缩rar文件到空白文件夹，按照**readme.md**的说明建库，然后按照自己的情况修改服务器配置文件（**要记得修改DNS和静态文件URL**），一切准备就绪之后双击 _Momotok-Server.exe_ 启动服务器。APK安装包也包含在压缩包中可供Android设备安装。
 
 ### 功能说明
 
-接口功能正在开发中
-
-* 用户登录数据保存在MySQL数据库中
-* 视频上传后会保存到本地 public 目录中，访问时用 127.0.0.1:8080/static/hashed256_video_name 即可
-* 服务器存在配置文件，在system的config.yaml中定义了
+* 各种数据都保存在MySQL数据库中
+* 视频上传后会保存到本地 public 目录中，访问时用 127.0.0.1:8080/static/hashed256_video_name 即可，也可以在服务器配置文件修改地址
+* 服务器存在配置文件，在system的config.yaml中定义了多个可修改选项
 
 ### 正在开发
- 1. 代码与数据库优化 
+ 1. 代码与数据库优化，找到并修复潜在BUG 
 
 ### 目前进度
 - [x] basic apis
@@ -43,14 +43,6 @@ go build && ./Momotok-Server
   - [x] apiRouter.GET("/relation/friend/list/", controller.FriendList)
   - [x] apiRouter.GET("/message/chat/", controller.MessageChat)
   - [x] apiRouter.POST("/message/action/", controller.MessageAction) 
-
-### 测试
-
-test 目录下为不同场景的功能测试case，可用于验证功能实现正确性
-
-其中 common.go 中的 _serverAddr_ 为服务部署的地址，默认为本机地址，可以根据实际情况修改
-
-测试数据写在 demo_data.go 中，用于列表接口的 mock 测试
 
 ### 建库说明
 ````mysql
