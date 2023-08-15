@@ -44,7 +44,7 @@ func MessageChat(c *gin.Context) {
 	var msgList = make([]model.Message, 0)
 	if utils.CheckToken(tokenString) {
 		db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
-		rows, err := db.Query("SELECT * FROM messages WHERE retriever_id = ?AND created_at < ?", toUserId, preMsgTime)
+		rows, err := db.Query("SELECT * FROM messages WHERE retriever_id = ?AND created_at > ?", toUserId, preMsgTime)
 		if err != nil {
 			fmt.Println("Failed to connect to database:", err)
 		}
