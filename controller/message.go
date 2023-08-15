@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
 )
 
 type ChatResponse struct {
@@ -28,7 +27,7 @@ func MessageAction(c *gin.Context) {
 			fmt.Println("Database connected failed: ", err)
 			return
 		}
-		db.Exec("INSERT INTO messages(sender_id, retriever_id, message) value(?, ?, ?)", senderUID, toUserId, content)
+		db.Exec("INSERT INTO messages(sender_id, retriever_id, message, created_at) value(?, ?, ?, unix_timestamp())", senderUID, toUserId, content)
 		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
 		return
 	} else {
@@ -53,16 +52,15 @@ func MessageChat(c *gin.Context) {
 			var toUserID int64
 			var fromUserID int64
 			var content string
-			var createdTime string
+			var createdTime int64
 			err := rows.Scan(&id, &fromUserID, &toUserID, &createdTime, &content)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			t, err := time.Parse("2006-01-02 15:04:05", createdTime)
 			msgStruct := model.Message{
 				Content:    content,
-				CreateTime: t.Unix(),
+				CreateTime: createdTime,
 				FromUserID: fromUserID,
 				ID:         id,
 				ToUserID:   toUserID,

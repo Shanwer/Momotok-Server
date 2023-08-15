@@ -142,10 +142,10 @@ create table messages
 (
   id           int auto_increment
     primary key,
-  sender_id    int                                 null,
-  retriever_id int                                 null,
-  created_at   timestamp default CURRENT_TIMESTAMP not null comment 'created_at',
-  message      text                                null,
+  sender_id    int,
+  retriever_id int,
+  created_at   bigint,
+  message      text,
   constraint messages_retriever_fk
     foreign key (retriever_id) references user (id),
   constraint messages_sender_fk

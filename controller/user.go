@@ -14,11 +14,6 @@ import (
 	"strconv"
 )
 
-// usersLoginInfo use map to store user info, token is created by jwt
-var usersLoginInfo = map[string]model.User{
-	//TODO:其他模块需要改写为从数据库中获取
-}
-
 type UserLoginResponse struct {
 	model.Response
 	UserId int64  `json:"user_id,omitempty"`
@@ -82,7 +77,6 @@ func Login(c *gin.Context) {
 	err = db.QueryRow("SELECT password, id FROM user WHERE username = ?", username).Scan(&storedPassword, &id)
 	err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
 	if err != nil {
-		//fmt.Println("Wrong username or password: ", err)
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: model.Response{StatusCode: 1, StatusMsg: "Wrong username or password"},
 		})
