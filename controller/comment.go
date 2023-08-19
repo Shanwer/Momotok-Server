@@ -21,7 +21,7 @@ type CommentActionResponse struct {
 	Comment model.Comment `json:"comment,omitempty"`
 }
 
-// CommentAction no practical effect, just check if token is valid
+// CommentAction handles comment or delete comments action
 func CommentAction(c *gin.Context) {
 	token := c.Query("token")
 	actionType := c.Query("action_type")
@@ -68,7 +68,6 @@ func CommentAction(c *gin.Context) {
 			fmt.Println("Failed to get comment ID:", err)
 		}
 
-		//fmt.Println("last insert id :", commentID)
 		c.JSON(http.StatusOK, CommentActionResponse{Response: model.Response{StatusCode: 0},
 			Comment: model.Comment{
 				Id:         commentID,
@@ -77,11 +76,23 @@ func CommentAction(c *gin.Context) {
 				CreateDate: currentDate,
 			}})
 		return
+	} else if actionType == "2" {
+		db, err := sql.Open("mysql", system.ServerInfo.Server.DatabaseAddress) //连接数据库
+		if err != nil {
+			fmt.Println("Failed to connect to database:", err)
+		}
+		defer db.Close()
+		commentID := c.Query("comment_id")
+		_, err = db.Exec("DELETE FROM comments WHERE id = ?", commentID)
+		if err != nil {
+			fmt.Println("Comment Upload failed：", err)
+		}
+		c.JSON(http.StatusOK, model.Response{StatusCode: 0})
+		return
 	}
-	c.JSON(http.StatusOK, model.Response{StatusCode: 0})
 }
 
-// CommentList all videos have same demo comment list
+// CommentList provides comment list
 func CommentList(c *gin.Context) {
 	videoID := c.Query("video_id")
 	Comments, err := makeCommentList(videoID)
