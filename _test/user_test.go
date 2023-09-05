@@ -4,6 +4,8 @@ import (
 	"Momotok-Server/controller"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,27 +18,15 @@ type Response struct {
 }
 
 func TestRegister(t *testing.T) {
-	router := gin.Default()
-
-	router.POST("/douyin/user/register", controller.Register)
-
-	req, _ := http.NewRequest("POST", "http://0.0.0.0:8080/douyin/user/register?username=test&password=test", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Post("http://localhost:8080/douyin/user/register?username=test&password=test", "POST", nil)
+	assert.NoError(t, err)
 	var response Response
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
@@ -47,7 +37,7 @@ func TestLogin(t *testing.T) {
 
 	router.POST("/douyin/user/login", controller.Login)
 
-	req, _ := http.NewRequest("POST", "http://0.0.0.0:8080/douyin/user/login?username=test&password=test", nil)
+	req, _ := http.NewRequest("POST", "http://localhost:8080/douyin/user/login?username=test&password=test", nil)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res := httptest.NewRecorder()
