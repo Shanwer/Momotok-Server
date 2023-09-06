@@ -1,13 +1,10 @@
 package _test
 
 import (
-	"Momotok-Server/controller"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -15,6 +12,26 @@ type Response struct {
 	StatusCode int    `json:"status_code"`
 	UserID     int    `json:"user_id"`
 	Token      string `json:"token"`
+}
+
+type Response2 struct {
+	StatusCode int    `json:"status_code"`
+	StatusMsg  string `json:"status_msg"`
+	User       User   `json:"user"`
+}
+
+type User struct {
+	ID              int    `json:"id"`
+	Name            string `json:"name"`
+	FollowCount     int    `json:"follow_count"`
+	FollowerCount   int    `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar"`
+	BackgroundImage string `json:"background_image"`
+	Signature       string `json:"signature"`
+	TotalFavorited  string `json:"total_favorited"`
+	WorkCount       int    `json:"work_count"`
+	FavoriteCount   int    `json:"favorite_count"`
 }
 
 func TestRegister(t *testing.T) {
@@ -31,59 +48,27 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	t.Helper()
-
-	router := gin.Default()
-
-	router.POST("/douyin/user/login", controller.Login)
-
-	req, _ := http.NewRequest("POST", "http://localhost:8080/douyin/user/login?username=test&password=test", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Post("http://localhost:8080/douyin/user/login?username=test&password=test", "POST", nil)
+	assert.NoError(t, err)
 	var response Response
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
 		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
 func TestUser(t *testing.T) {
-	router := gin.Default()
 
-	router.GET("/douyin/user/", controller.UserInfo)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/user/?user_id=6&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTM5MjYzOTIsInVzZXJpZCI6NiwidXNlcm5hbWUiOiJ0ZXN0In0.7w-mygkH6JUjtsWD9GNYyjYn0LGYaAtAJKEKpNafu14", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
-	var response Response
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	res, err := http.Get("http://localhost:8080/douyin/user/?user_id=9&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY")
+	assert.NoError(t, err)
+	var response Response2
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
 		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}

@@ -1,11 +1,10 @@
 package _test
 
 import (
-	"Momotok-Server/controller"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -35,117 +34,53 @@ type User struct {
 }
 
 func TestAction(t *testing.T) {
-	router := gin.Default()
-
-	router.POST("/douyin/relation/action/", controller.RelationAction)
-
-	req, _ := http.NewRequest("POST", "http://0.0.0.0:8080/douyin/relation/action/?to_user_id=1&action_type=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Post("http://localhost:8080/douyin/relation/action?to_user_id=1&action_type=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY", "POST", nil)
+	assert.NoError(t, err)
 	var response Response
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
 func TestFollow(t *testing.T) {
-	router := gin.Default()
-
-	router.GET("/douyin/relation/follow/list/", controller.FollowList)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/relation/follow/list/?user_id=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Get("http://localhost:8080/douyin/relation/follow/list/?user_id=9&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY")
+	assert.NoError(t, err)
 	var response Response2
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
 func TestFollower(t *testing.T) {
-	router := gin.Default()
-
-	router.GET("/douyin/relation/follower/list/", controller.FollowerList)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/relation/follower/list/?user_id=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Get("http://localhost:8080/douyin/relation/follower/list/?user_id=9&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY")
+	assert.NoError(t, err)
 	var response Response2
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
 func TestFriend(t *testing.T) {
-	router := gin.Default()
-
-	router.GET("/douyin/relation/friend/list/", controller.FriendList)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/relation/friend/list/?user_id=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQwMTQxMTQsInVzZXJpZCI6NiwidXNlcm5hbWUiOiJ0ZXN0In0.LeUmdt3nhymQhEjgqvED-ioX8H9Ta0TtI0Ouzh2mD_0", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Get("http://localhost:8080/douyin/relation/friend/list/?user_id=9&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY")
+	assert.NoError(t, err)
 	var response Response2
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }

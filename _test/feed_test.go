@@ -1,11 +1,10 @@
 package _test
 
 import (
-	"Momotok-Server/controller"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -38,30 +37,14 @@ type Response struct {
 }
 
 func TestFeed(t *testing.T) {
-	router := gin.Default()
-
-	router.GET("/douyin/feed", controller.Register)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/feed", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Get("http://localhost:8080/douyin/feed/")
+	assert.NoError(t, err)
 	var response Response
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }

@@ -1,11 +1,10 @@
 package _test
 
 import (
-	"Momotok-Server/controller"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -43,59 +42,27 @@ type User struct {
 }
 
 func TestAction(t *testing.T) {
-	router := gin.Default()
-
-	router.POST("/douyin/comment/action/", controller.CommentAction)
-
-	req, _ := http.NewRequest("POST", "http://0.0.0.0:8080/douyin/comment/action/?action_type=1&comment_text=hello&video_id=1&action_type=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Post("http://localhost:8080/douyin/comment/action/?video_id=1&action_type=1&comment_text=hello&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY", "POST", nil)
+	assert.NoError(t, err)
 	var response Response
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
 func TestList(t *testing.T) {
-	router := gin.Default()
-
-	router.GET("/douyin/comment/list/", controller.CommentList)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/comment/list/?user_id=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Get("http://localhost:8080/douyin/comment/list/?video_id=1&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY")
+	assert.NoError(t, err)
 	var response Response2
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
