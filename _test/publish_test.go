@@ -1,21 +1,21 @@
 package _test
 
 import (
-	"Momotok-Server/controller"
 	"bytes"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	"io"
+	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 )
 
 type Response1 struct {
-	StatusCode int    `json:"status_code"`
-	StatusMsg  string `json:"status_msg"`
+	StatusCode int `json:"status_code"`
+	//StatusMsg  string `json:"status_msg"`
 }
 
 type Response2 struct {
@@ -47,92 +47,65 @@ type Response2 struct {
 }
 
 func TestAction(t *testing.T) {
-	router := gin.Default()
 
-	router.POST("/douyin/publish/action/", controller.Publish)
-
-	// Create a new multipart writer
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
-
-	// Create a form field for the video file
-
-	// Open the video file
-	file, err := os.Open("video.avi")
+	// 打开视频文件
+	file, err := os.Open("bear.mp4")
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 	defer file.Close()
 
-	// Create a buffer to store the file content
-	fileContent := bytes.Buffer{}
-	_, err = io.Copy(&fileContent, file)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// 添加 token 字段到多部分表单
+	tokenField, err := writer.CreateFormField("token")
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
+	}
+	tokenField.Write([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxNDI3NzcsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.B_sZ6EaoR76irdZwR2vsaazShyPlGP30KZhJeCYSesM"))
+
+	titleField, err := writer.CreateFormField("title")
+	if err != nil {
+		log.Fatal(err)
+	}
+	titleField.Write([]byte("video"))
+
+	dataField, err := writer.CreateFormFile("data", "bear.mp4")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// Add other form fields
-	_ = writer.WriteField("data", fileContent.String())
-	_ = writer.WriteField("token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTM5ODYwMDYsInVzZXJpZCI6NiwidXNlcm5hbWUiOiJ0ZXN0In0.jwcpAC6mErbh3esZuYwS5qLRVxQTmQ3q9183RcTXbCI")
-	_ = writer.WriteField("title", "video")
-
-	// Close the multipart writer to finalize the body
-	err = writer.Close()
+	_, err = io.Copy(dataField, file) // 将文件内容拷贝到表单字段中
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 
-	// Create a new HTTP request with the body
-	req, err := http.NewRequest("POST", "http://0.0.0.0:8080/douyin/publish/action/", body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// 必须在writer.Close()之前调用，以便写入最后的boundary
+	writer.Close()
 
-	// Set the Content-Type header
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	// 创建一个新的HTTP请求，并将body设置为multipart.Writer的内容
+	res, err := http.Post("http://0.0.0.0:8080/douyin/publish/action/", writer.FormDataContentType(), body)
+	assert.NoError(t, err)
 	var response Response1
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if response.StatusCode != 0 && res.Code == 200 {
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
+	if response.StatusCode != 0 {
 		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
 
 func TestList(t *testing.T) {
-	router := gin.Default()
-
-	router.GET("/douyin/publish/list/", controller.PublishList)
-
-	req, _ := http.NewRequest("GET", "http://0.0.0.0:8080/douyin/publish/list/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTM5ODYwMDYsInVzZXJpZCI6NiwidXNlcm5hbWUiOiJ0ZXN0In0.jwcpAC6mErbh3esZuYwS5qLRVxQTmQ3q9183RcTXbCI&user_id=6", nil)
-	req.Header.Set("Content-Type", "application/json")
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, req)
-
+	res, err := http.Get("http://localhost:8080/douyin/publish/list/?user_id=9&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTQxMDA5NzUsInVzZXJpZCI6OSwidXNlcm5hbWUiOiJ0ZXN0In0.16RpXZQAGYgy5XGULMRlEufFq_ruPlsGjpQYxRT29DY")
+	assert.NoError(t, err)
 	var response Response2
-	if res.Body.Len() > 0 {
-		err := json.Unmarshal(res.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if res.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, res.Code)
-	}
-
+	returnedJson, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	err = json.Unmarshal(returnedJson, &response)
+	assert.Nil(t, err)
 	if response.StatusCode != 0 {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.StatusCode)
+		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
