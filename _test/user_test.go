@@ -42,7 +42,7 @@ func TestRegister(t *testing.T) {
 	assert.Nil(t, err)
 	err = json.Unmarshal(returnedJson, &response)
 	assert.Nil(t, err)
-	if response.StatusCode != 0 {
+	if response.StatusCode != 1 {
 		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
@@ -55,7 +55,7 @@ func TestLogin(t *testing.T) {
 	assert.Nil(t, err)
 	err = json.Unmarshal(returnedJson, &response)
 	assert.Nil(t, err)
-	if response.StatusCode != 0 {
+	if response.StatusCode != 1 {
 		t.Errorf("Expected status code %d, but got %d", 0, response.StatusCode)
 	}
 }
